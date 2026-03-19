@@ -1,0 +1,177 @@
+{
+  "model_comparison": {
+    "traditional_only": {
+      "auc": 0.6869,
+      "ks": 0.3419,
+      "gini": 0.3738
+    },
+    "logistic_regression": {
+      "auc": 0.7613,
+      "ks": 0.452,
+      "gini": 0.5226
+    },
+    "gradient_boosting": {
+      "auc": 0.7317,
+      "ks": 0.4115,
+      "gini": 0.4634
+    },
+    "combined (trad + cash flow)": {
+      "auc": 0.736,
+      "ks": 0.4105,
+      "gini": 0.472
+    }
+  },
+  "feature_importance": {
+    "has_gig_income": 0.19199109077453613,
+    "obligation_to_income_ratio": 0.06865304708480835,
+    "estimated_balance_trend": 0.046037618070840836,
+    "net_monthly_cashflow_mean": 0.03742559999227524,
+    "income_to_expense_ratio": 0.027576101943850517,
+    "overdraft_count": 0.026643045246601105,
+    "savings_rate": 0.026527278125286102,
+    "payday_loan_flag": 0.025445060804486275,
+    "overdraft_frequency": 0.02349439635872841,
+    "income_regularity": 0.023190151900053024,
+    "income_source_count": 0.02185133285820484,
+    "fee_total": 0.018468312919139862,
+    "monthly_spend_std": 0.01691683754324913,
+    "monthly_spend_mean": 0.016793644055724144,
+    "total_monthly_obligations": 0.016752056777477264
+  },
+  "business_value": {
+    "missed_opportunity": {
+      "total_rejected": 465,
+      "would_repay": 285,
+      "repay_pct": 0.6129,
+      "cf_rescued": 218,
+      "rescue_default_rate": 0.2661
+    },
+    "avoidable_risk": {
+      "total_approved": 785,
+      "defaulted": 133,
+      "default_pct": 0.1694,
+      "cf_flagged": 50,
+      "cf_caught": 21
+    },
+    "approval_comparison": [
+      {
+        "target_loss_rate": 0.05,
+        "trad_approval_rate": 0,
+        "cf_approval_rate": 0.0032,
+        "approval_lift": 0.0032
+      },
+      {
+        "target_loss_rate": 0.1,
+        "trad_approval_rate": 0,
+        "cf_approval_rate": 0.0032,
+        "approval_lift": 0.0032
+      },
+      {
+        "target_loss_rate": 0.15,
+        "trad_approval_rate": 0,
+        "cf_approval_rate": 0.0032,
+        "approval_lift": 0.0032
+      },
+      {
+        "target_loss_rate": 0.2,
+        "trad_approval_rate": 0,
+        "cf_approval_rate": 0.8384,
+        "approval_lift": 0.8384
+      },
+      {
+        "target_loss_rate": 0.25,
+        "trad_approval_rate": 0,
+        "cf_approval_rate": 0.9992,
+        "approval_lift": 0.9992
+      },
+      {
+        "target_loss_rate": 0.3,
+        "trad_approval_rate": 0,
+        "cf_approval_rate": 1.0,
+        "approval_lift": 1.0
+      }
+    ],
+    "loss_comparison": [
+      {
+        "target_approval_rate": 0.5,
+        "trad_loss_rate": 0.1296,
+        "cf_loss_rate": 0.1104,
+        "loss_reduction_pct": 14.81
+      },
+      {
+        "target_approval_rate": 0.6,
+        "trad_loss_rate": 0.1627,
+        "cf_loss_rate": 0.128,
+        "loss_reduction_pct": 21.31
+      },
+      {
+        "target_approval_rate": 0.7,
+        "trad_loss_rate": 0.1954,
+        "cf_loss_rate": 0.1577,
+        "loss_reduction_pct": 19.3
+      },
+      {
+        "target_approval_rate": 0.8,
+        "trad_loss_rate": 0.217,
+        "cf_loss_rate": 0.189,
+        "loss_reduction_pct": 12.9
+      },
+      {
+        "target_approval_rate": 0.9,
+        "trad_loss_rate": 0.2356,
+        "cf_loss_rate": 0.216,
+        "loss_reduction_pct": 8.3
+      }
+    ],
+    "risk_buckets": [
+      {
+        "bucket": "Very Low Risk (750+)",
+        "count": 744,
+        "pct": 0.5952,
+        "default_rate": 0.1263
+      },
+      {
+        "bucket": "Low Risk (650-749)",
+        "count": 176,
+        "pct": 0.1408,
+        "default_rate": 0.358
+      },
+      {
+        "bucket": "Medium Risk (550-649)",
+        "count": 157,
+        "pct": 0.1256,
+        "default_rate": 0.3822
+      },
+      {
+        "bucket": "High Risk (450-549)",
+        "count": 98,
+        "pct": 0.0784,
+        "default_rate": 0.551
+      },
+      {
+        "bucket": "Very High Risk (<450)",
+        "count": 75,
+        "pct": 0.06,
+        "default_rate": 0.56
+      }
+    ],
+    "cross_tab": {
+      "trad_hi_flow_hi": {
+        "n": 605,
+        "default_rate": 0.1157
+      },
+      "trad_hi_flow_lo": {
+        "n": 42,
+        "default_rate": 0.4524
+      },
+      "trad_lo_flow_hi": {
+        "n": 315,
+        "default_rate": 0.2762
+      },
+      "trad_lo_flow_lo": {
+        "n": 288,
+        "default_rate": 0.4757
+      }
+    }
+  }
+}

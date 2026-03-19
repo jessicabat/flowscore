@@ -1,0 +1,231 @@
+{
+  "metrics": {
+    "total_transactions": 6209,
+    "overall_accuracy": 0.9924,
+    "correct": 6162,
+    "rule_matched": 6209,
+    "llm_matched": 0,
+    "rule_pct": 1.0,
+    "per_category": {
+      "atm": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 238
+      },
+      "bnpl": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 44
+      },
+      "dining": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 1532
+      },
+      "fee": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 11
+      },
+      "food_delivery": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 993
+      },
+      "gambling": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 73
+      },
+      "gambling_win": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 23
+      },
+      "gig_income": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 565
+      },
+      "groceries": {
+        "precision": 1.0,
+        "recall": 0.9266,
+        "f1": 0.9619,
+        "support": 640
+      },
+      "healthcare": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 64
+      },
+      "insurance": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 48
+      },
+      "loan_payment": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 73
+      },
+      "mortgage": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 11
+      },
+      "payday_loan_deposit": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 3
+      },
+      "payday_loan_repayment": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 3
+      },
+      "payroll": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 102
+      },
+      "rent": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 67
+      },
+      "shopping": {
+        "precision": 0.8454,
+        "recall": 1.0,
+        "f1": 0.9162,
+        "support": 257
+      },
+      "subscription": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 274
+      },
+      "transfer": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 187
+      },
+      "transportation": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 664
+      },
+      "travel": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2
+      },
+      "utilities": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 335
+      }
+    },
+    "top_confusions": [
+      {
+        "true": "groceries",
+        "predicted": "shopping",
+        "count": 47
+      }
+    ],
+    "api_usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "estimated_cost_usd": 0.0
+    }
+  },
+  "config": {
+    "n_consumers": 10,
+    "model": "rules_only",
+    "batch_size": 30,
+    "seed": 42,
+    "noise_level": "none"
+  },
+  "per_consumer": [
+    {
+      "consumer_id": "c_00429",
+      "rule_matched": 216,
+      "llm_matched": 0,
+      "accuracy": 0.9861111111111112
+    },
+    {
+      "consumer_id": "c_03863",
+      "rule_matched": 529,
+      "llm_matched": 0,
+      "accuracy": 0.998109640831758
+    },
+    {
+      "consumer_id": "c_00445",
+      "rule_matched": 464,
+      "llm_matched": 0,
+      "accuracy": 0.9892241379310345
+    },
+    {
+      "consumer_id": "c_03268",
+      "rule_matched": 869,
+      "llm_matched": 0,
+      "accuracy": 0.9907940161104718
+    },
+    {
+      "consumer_id": "c_02191",
+      "rule_matched": 1097,
+      "llm_matched": 0,
+      "accuracy": 0.99179580674567
+    },
+    {
+      "consumer_id": "c_02162",
+      "rule_matched": 1047,
+      "llm_matched": 0,
+      "accuracy": 0.9894937917860553
+    },
+    {
+      "consumer_id": "c_03485",
+      "rule_matched": 534,
+      "llm_matched": 0,
+      "accuracy": 0.9943820224719101
+    },
+    {
+      "consumer_id": "c_00470",
+      "rule_matched": 555,
+      "llm_matched": 0,
+      "accuracy": 0.9963963963963964
+    },
+    {
+      "consumer_id": "c_01007",
+      "rule_matched": 458,
+      "llm_matched": 0,
+      "accuracy": 0.9934497816593887
+    },
+    {
+      "consumer_id": "c_04289",
+      "rule_matched": 440,
+      "llm_matched": 0,
+      "accuracy": 0.9954545454545455
+    }
+  ]
+}

@@ -1,0 +1,307 @@
+{
+  "metrics": {
+    "total_transactions": 6209,
+    "overall_accuracy": 0.9573,
+    "correct": 5944,
+    "rule_matched": 5169,
+    "llm_matched": 1040,
+    "rule_pct": 0.8325,
+    "per_category": {
+      "atm": {
+        "precision": 0.9957,
+        "recall": 0.9664,
+        "f1": 0.9808,
+        "support": 238
+      },
+      "bnpl": {
+        "precision": 1.0,
+        "recall": 0.9773,
+        "f1": 0.9885,
+        "support": 44
+      },
+      "dining": {
+        "precision": 1.0,
+        "recall": 0.9719,
+        "f1": 0.9858,
+        "support": 1532
+      },
+      "fee": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 11
+      },
+      "food_delivery": {
+        "precision": 0.9968,
+        "recall": 0.9355,
+        "f1": 0.9652,
+        "support": 993
+      },
+      "gambling": {
+        "precision": 1.0,
+        "recall": 0.9315,
+        "f1": 0.9645,
+        "support": 73
+      },
+      "gambling_win": {
+        "precision": 1.0,
+        "recall": 0.913,
+        "f1": 0.9545,
+        "support": 23
+      },
+      "gig_income": {
+        "precision": 0.9963,
+        "recall": 0.9416,
+        "f1": 0.9682,
+        "support": 565
+      },
+      "groceries": {
+        "precision": 0.9383,
+        "recall": 0.9031,
+        "f1": 0.9204,
+        "support": 640
+      },
+      "healthcare": {
+        "precision": 1.0,
+        "recall": 0.9844,
+        "f1": 0.9921,
+        "support": 64
+      },
+      "insurance": {
+        "precision": 0.9778,
+        "recall": 0.9167,
+        "f1": 0.9462,
+        "support": 48
+      },
+      "loan_payment": {
+        "precision": 0.9865,
+        "recall": 1.0,
+        "f1": 0.9932,
+        "support": 73
+      },
+      "mortgage": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 11
+      },
+      "other": {
+        "precision": 0.0,
+        "recall": 0,
+        "f1": 0,
+        "support": 0
+      },
+      "payday_loan_deposit": {
+        "precision": 1.0,
+        "recall": 0.6667,
+        "f1": 0.8,
+        "support": 3
+      },
+      "payday_loan_repayment": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 3
+      },
+      "payroll": {
+        "precision": 0.99,
+        "recall": 0.9706,
+        "f1": 0.9802,
+        "support": 102
+      },
+      "rent": {
+        "precision": 1.0,
+        "recall": 0.9403,
+        "f1": 0.9692,
+        "support": 67
+      },
+      "shopping": {
+        "precision": 0.8111,
+        "recall": 0.9689,
+        "f1": 0.883,
+        "support": 257
+      },
+      "subscription": {
+        "precision": 0.9679,
+        "recall": 0.9891,
+        "f1": 0.9783,
+        "support": 274
+      },
+      "transfer": {
+        "precision": 0.8451,
+        "recall": 0.9626,
+        "f1": 0.9,
+        "support": 187
+      },
+      "transportation": {
+        "precision": 0.9924,
+        "recall": 0.9864,
+        "f1": 0.9894,
+        "support": 664
+      },
+      "travel": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2
+      },
+      "utilities": {
+        "precision": 1.0,
+        "recall": 0.9791,
+        "f1": 0.9894,
+        "support": 335
+      }
+    },
+    "top_confusions": [
+      {
+        "true": "groceries",
+        "predicted": "shopping",
+        "count": 55
+      },
+      {
+        "true": "food_delivery",
+        "predicted": "groceries",
+        "count": 37
+      },
+      {
+        "true": "dining",
+        "predicted": "other",
+        "count": 37
+      },
+      {
+        "true": "gig_income",
+        "predicted": "transfer",
+        "count": 26
+      },
+      {
+        "true": "food_delivery",
+        "predicted": "other",
+        "count": 15
+      },
+      {
+        "true": "atm",
+        "predicted": "other",
+        "count": 8
+      },
+      {
+        "true": "transportation",
+        "predicted": "other",
+        "count": 7
+      },
+      {
+        "true": "groceries",
+        "predicted": "other",
+        "count": 7
+      },
+      {
+        "true": "gig_income",
+        "predicted": "other",
+        "count": 7
+      },
+      {
+        "true": "shopping",
+        "predicted": "other",
+        "count": 6
+      },
+      {
+        "true": "utilities",
+        "predicted": "other",
+        "count": 5
+      },
+      {
+        "true": "food_delivery",
+        "predicted": "subscription",
+        "count": 5
+      },
+      {
+        "true": "transfer",
+        "predicted": "other",
+        "count": 5
+      },
+      {
+        "true": "rent",
+        "predicted": "other",
+        "count": 4
+      },
+      {
+        "true": "gambling",
+        "predicted": "other",
+        "count": 4
+      }
+    ],
+    "api_usage": {
+      "input_tokens": 43287,
+      "output_tokens": 15475,
+      "estimated_cost_usd": 0.362
+    }
+  },
+  "config": {
+    "n_consumers": 10,
+    "model": "claude-sonnet-4-20250514",
+    "batch_size": 30,
+    "seed": 42,
+    "noise_level": "medium"
+  },
+  "per_consumer": [
+    {
+      "consumer_id": "c_00429",
+      "rule_matched": 188,
+      "llm_matched": 28,
+      "accuracy": 0.9768518518518519
+    },
+    {
+      "consumer_id": "c_03863",
+      "rule_matched": 434,
+      "llm_matched": 95,
+      "accuracy": 0.9395085066162571
+    },
+    {
+      "consumer_id": "c_00445",
+      "rule_matched": 388,
+      "llm_matched": 76,
+      "accuracy": 0.959051724137931
+    },
+    {
+      "consumer_id": "c_03268",
+      "rule_matched": 713,
+      "llm_matched": 156,
+      "accuracy": 0.9551208285385501
+    },
+    {
+      "consumer_id": "c_02191",
+      "rule_matched": 921,
+      "llm_matched": 176,
+      "accuracy": 0.9644484958979034
+    },
+    {
+      "consumer_id": "c_02162",
+      "rule_matched": 884,
+      "llm_matched": 163,
+      "accuracy": 0.9541547277936963
+    },
+    {
+      "consumer_id": "c_03485",
+      "rule_matched": 449,
+      "llm_matched": 85,
+      "accuracy": 0.9531835205992509
+    },
+    {
+      "consumer_id": "c_00470",
+      "rule_matched": 437,
+      "llm_matched": 118,
+      "accuracy": 0.9675675675675676
+    },
+    {
+      "consumer_id": "c_01007",
+      "rule_matched": 383,
+      "llm_matched": 75,
+      "accuracy": 0.9454148471615721
+    },
+    {
+      "consumer_id": "c_04289",
+      "rule_matched": 372,
+      "llm_matched": 68,
+      "accuracy": 0.9659090909090909
+    }
+  ]
+}
