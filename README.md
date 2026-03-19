@@ -4,7 +4,7 @@
 
 FlowScore is an end-to-end ML pipeline that predicts credit default risk using deposit account transactions — no credit bureau history required.
 
-**[View the project](https://jessicabat.github.io/flowscore/)**
+**[View the project](https://jessicabat.github.io/flowscore/)** · **[Live Demo](https://flowscore.streamlit.app)**
 
 ---
 

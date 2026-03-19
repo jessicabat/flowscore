@@ -895,7 +895,7 @@ def main():
         y_test, primary_cf["proba"], meta_test, args.output,
     )
 
-    # Save trained model bundle for Gradio demo
+    # Save trained model bundle for Streamlit demo
     try:
         import joblib
         bundle = {
@@ -911,7 +911,7 @@ def main():
         }
         bundle_path = os.path.join(args.output, "model_bundle.joblib")
         joblib.dump(bundle, bundle_path)
-        print(f"\nModel bundle saved to {bundle_path} (for Gradio demo)")
+        print(f"\nModel bundle saved to {bundle_path} (for Streamlit demo)")
     except ImportError:
         print("\nNote: joblib not installed, model bundle not saved. "
               "Run: pip install joblib")
