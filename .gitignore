@@ -1,0 +1,5 @@
+.env
+data/flowscore_dataset.json
+data/features.csv
+plan.md
+src/__pycache__/

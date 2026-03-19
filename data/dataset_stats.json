@@ -1,0 +1,37 @@
+{
+  "n_consumers": 5000,
+  "total_transactions": 3304340,
+  "avg_txns": 660.9,
+  "default_rate": 0.2508,
+  "archetypes": {
+    "thin_file_newcomer": {
+      "n": 609,
+      "pct": 0.122
+    },
+    "gig_worker": {
+      "n": 743,
+      "pct": 0.149
+    },
+    "financially_stressed": {
+      "n": 711,
+      "pct": 0.142
+    },
+    "stable_salaried": {
+      "n": 1541,
+      "pct": 0.308
+    },
+    "overextended": {
+      "n": 631,
+      "pct": 0.126
+    },
+    "high_earner_high_spender": {
+      "n": 765,
+      "pct": 0.153
+    }
+  },
+  "trad_score": {
+    "mean": 656.0,
+    "std": 88.1
+  },
+  "seed": 42
+}
