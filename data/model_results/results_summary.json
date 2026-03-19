@@ -15,162 +15,199 @@
       "ks": 0.4115,
       "gini": 0.4634
     },
-    "combined (trad + cash flow)": {
-      "auc": 0.736,
-      "ks": 0.4105,
-      "gini": 0.472
+    "lightgbm_optuna": {
+      "auc": 0.7611,
+      "ks": 0.4542,
+      "gini": 0.5222
+    },
+    "catboost_optuna": {
+      "auc": 0.7637,
+      "ks": 0.4404,
+      "gini": 0.5273
+    },
+    "combined (trad + best CF)": {
+      "auc": 0.7617,
+      "ks": 0.4521,
+      "gini": 0.5233
     }
   },
   "feature_importance": {
-    "has_gig_income": 0.19199109077453613,
-    "obligation_to_income_ratio": 0.06865304708480835,
-    "estimated_balance_trend": 0.046037618070840836,
-    "net_monthly_cashflow_mean": 0.03742559999227524,
-    "income_to_expense_ratio": 0.027576101943850517,
-    "overdraft_count": 0.026643045246601105,
-    "savings_rate": 0.026527278125286102,
-    "payday_loan_flag": 0.025445060804486275,
-    "overdraft_frequency": 0.02349439635872841,
-    "income_regularity": 0.023190151900053024,
-    "income_source_count": 0.02185133285820484,
-    "fee_total": 0.018468312919139862,
-    "monthly_spend_std": 0.01691683754324913,
-    "monthly_spend_mean": 0.016793644055724144,
-    "total_monthly_obligations": 0.016752056777477264
+    "income_regularity": 152.0,
+    "obligation_to_income_ratio": 147.0,
+    "estimated_balance_trend": 133.0,
+    "net_monthly_cashflow_std": 118.0,
+    "subscription_total_monthly": 108.0,
+    "overdraft_frequency": 102.0,
+    "spending_trend_slope": 79.0,
+    "total_monthly_obligations": 78.0,
+    "avg_transaction_size": 68.0,
+    "monthly_spend_mean": 68.0,
+    "min_monthly_cashflow": 61.0,
+    "essential_ratio": 53.0,
+    "housing_payment_consistency": 47.0,
+    "income_trend_slope": 46.0,
+    "income_to_expense_ratio": 40.0
+  },
+  "best_params": {
+    "lightgbm": {
+      "n_estimators": 261,
+      "max_depth": 3,
+      "num_leaves": 60,
+      "learning_rate": 0.012914092431538576,
+      "min_child_samples": 91,
+      "subsample": 0.7790625041723434,
+      "colsample_bytree": 0.7912248717801318,
+      "reg_alpha": 2.4968164727504244e-07,
+      "reg_lambda": 2.435967394943158e-06,
+      "class_weight": "balanced",
+      "random_state": 42,
+      "verbose": -1
+    },
+    "catboost": {
+      "iterations": 209,
+      "depth": 6,
+      "learning_rate": 0.010621135453238527,
+      "l2_leaf_reg": 9.922174139832322,
+      "bagging_temperature": 0.6591538956384664,
+      "random_strength": 0.0188106189121094,
+      "auto_class_weights": "Balanced",
+      "random_seed": 42,
+      "verbose": 0
+    }
   },
   "business_value": {
     "missed_opportunity": {
       "total_rejected": 465,
       "would_repay": 285,
       "repay_pct": 0.6129,
-      "cf_rescued": 218,
-      "rescue_default_rate": 0.2661
+      "cf_rescued": 66,
+      "rescue_default_rate": 0.1818
     },
     "avoidable_risk": {
       "total_approved": 785,
       "defaulted": 133,
       "default_pct": 0.1694,
-      "cf_flagged": 50,
-      "cf_caught": 21
+      "cf_flagged": 165,
+      "cf_caught": 72
     },
     "approval_comparison": [
       {
         "target_loss_rate": 0.05,
         "trad_approval_rate": 0,
-        "cf_approval_rate": 0.0032,
-        "approval_lift": 0.0032
+        "cf_approval_rate": 0.0016,
+        "approval_lift": 0.0016
       },
       {
         "target_loss_rate": 0.1,
         "trad_approval_rate": 0,
-        "cf_approval_rate": 0.0032,
-        "approval_lift": 0.0032
+        "cf_approval_rate": 0.0016,
+        "approval_lift": 0.0016
       },
       {
         "target_loss_rate": 0.15,
         "trad_approval_rate": 0,
-        "cf_approval_rate": 0.0032,
-        "approval_lift": 0.0032
+        "cf_approval_rate": 0.0016,
+        "approval_lift": 0.0016
       },
       {
         "target_loss_rate": 0.2,
         "trad_approval_rate": 0,
-        "cf_approval_rate": 0.8384,
-        "approval_lift": 0.8384
+        "cf_approval_rate": 0.0016,
+        "approval_lift": 0.0016
       },
       {
         "target_loss_rate": 0.25,
         "trad_approval_rate": 0,
-        "cf_approval_rate": 0.9992,
-        "approval_lift": 0.9992
+        "cf_approval_rate": 0.0016,
+        "approval_lift": 0.0016
       },
       {
         "target_loss_rate": 0.3,
         "trad_approval_rate": 0,
-        "cf_approval_rate": 1.0,
-        "approval_lift": 1.0
+        "cf_approval_rate": 0.0016,
+        "approval_lift": 0.0016
       }
     ],
     "loss_comparison": [
       {
         "target_approval_rate": 0.5,
         "trad_loss_rate": 0.1296,
-        "cf_loss_rate": 0.1104,
-        "loss_reduction_pct": 14.81
+        "cf_loss_rate": 0.1056,
+        "loss_reduction_pct": 18.52
       },
       {
         "target_approval_rate": 0.6,
         "trad_loss_rate": 0.1627,
-        "cf_loss_rate": 0.128,
-        "loss_reduction_pct": 21.31
+        "cf_loss_rate": 0.116,
+        "loss_reduction_pct": 28.69
       },
       {
         "target_approval_rate": 0.7,
         "trad_loss_rate": 0.1954,
-        "cf_loss_rate": 0.1577,
-        "loss_reduction_pct": 19.3
+        "cf_loss_rate": 0.136,
+        "loss_reduction_pct": 30.41
       },
       {
         "target_approval_rate": 0.8,
         "trad_loss_rate": 0.217,
-        "cf_loss_rate": 0.189,
-        "loss_reduction_pct": 12.9
+        "cf_loss_rate": 0.174,
+        "loss_reduction_pct": 19.82
       },
       {
         "target_approval_rate": 0.9,
         "trad_loss_rate": 0.2356,
-        "cf_loss_rate": 0.216,
-        "loss_reduction_pct": 8.3
+        "cf_loss_rate": 0.2089,
+        "loss_reduction_pct": 11.32
       }
     ],
     "risk_buckets": [
       {
         "bucket": "Very Low Risk (750+)",
-        "count": 744,
-        "pct": 0.5952,
-        "default_rate": 0.1263
+        "count": 85,
+        "pct": 0.068,
+        "default_rate": 0.0471
       },
       {
         "bucket": "Low Risk (650-749)",
-        "count": 176,
-        "pct": 0.1408,
-        "default_rate": 0.358
+        "count": 563,
+        "pct": 0.4504,
+        "default_rate": 0.1101
       },
       {
         "bucket": "Medium Risk (550-649)",
-        "count": 157,
-        "pct": 0.1256,
-        "default_rate": 0.3822
+        "count": 186,
+        "pct": 0.1488,
+        "default_rate": 0.2151
       },
       {
         "bucket": "High Risk (450-549)",
-        "count": 98,
-        "pct": 0.0784,
-        "default_rate": 0.551
+        "count": 208,
+        "pct": 0.1664,
+        "default_rate": 0.4327
       },
       {
         "bucket": "Very High Risk (<450)",
-        "count": 75,
-        "pct": 0.06,
-        "default_rate": 0.56
+        "count": 208,
+        "pct": 0.1664,
+        "default_rate": 0.5625
       }
     ],
     "cross_tab": {
       "trad_hi_flow_hi": {
-        "n": 605,
-        "default_rate": 0.1157
+        "n": 513,
+        "default_rate": 0.0897
       },
       "trad_hi_flow_lo": {
-        "n": 42,
-        "default_rate": 0.4524
+        "n": 134,
+        "default_rate": 0.3209
       },
       "trad_lo_flow_hi": {
-        "n": 315,
-        "default_rate": 0.2762
+        "n": 135,
+        "default_rate": 0.1481
       },
       "trad_lo_flow_lo": {
-        "n": 288,
-        "default_rate": 0.4757
+        "n": 468,
+        "default_rate": 0.4359
       }
     }
   }

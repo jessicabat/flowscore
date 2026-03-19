@@ -1,0 +1,23 @@
+{
+  "0": "atm",
+  "1": "bnpl",
+  "2": "dining",
+  "3": "fee",
+  "4": "food_delivery",
+  "5": "gambling",
+  "6": "gig_income",
+  "7": "groceries",
+  "8": "healthcare",
+  "9": "insurance",
+  "10": "loan_payment",
+  "11": "mortgage",
+  "12": "payday_loan",
+  "13": "payroll",
+  "14": "rent",
+  "15": "shopping",
+  "16": "subscription",
+  "17": "transfer",
+  "18": "transportation",
+  "19": "travel",
+  "20": "utilities"
+}

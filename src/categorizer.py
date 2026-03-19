@@ -20,6 +20,13 @@ except ImportError:
     print("⚠️  anthropic package not installed. Run: pip install anthropic")
     print("   LLM categorization will be skipped. Rules-only mode available.\n")
 
+try:
+    import torch
+    from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
+    HAS_DISTILBERT_DEPS = True
+except ImportError:
+    HAS_DISTILBERT_DEPS = False
+
 
 # ============================================================================
 # CATEGORY TAXONOMY
@@ -356,7 +363,121 @@ def rule_based_categorize(merchant: str, amount: float) -> Optional[str]:
 
 
 # ============================================================================
-# STEP 2: LLM CATEGORIZER (Claude Sonnet via Anthropic API)
+# STEP 2A: DISTILBERT CATEGORIZER (fine-tuned, self-contained)
+# ============================================================================
+
+class DistilBERTCategorizer:
+    """
+    Inference wrapper for a fine-tuned DistilBERT transaction categorizer.
+
+    Replaces the Claude API fallback with a locally-hosted model that:
+      - Runs fully offline (no API key, no cost)
+      - Generalizes to noisy/unseen merchant strings via learned representations
+      - Returns per-class confidence scores (useful for low-confidence routing)
+
+    Load with: DistilBERTCategorizer("models/distilbert_categorizer/")
+    Train with: python src/train_distilbert.py --dataset data/flowscore_dataset.json
+    """
+
+    def __init__(self, model_dir: str, batch_size: int = 128, max_length: int = 64):
+        if not HAS_DISTILBERT_DEPS:
+            raise ImportError(
+                "transformers and torch are required for DistilBERT inference.\n"
+                "  pip install transformers torch"
+            )
+
+        if not os.path.isdir(model_dir):
+            raise FileNotFoundError(
+                f"DistilBERT model not found at: {model_dir}\n"
+                f"Train it first: python src/train_distilbert.py "
+                f"--dataset data/flowscore_dataset.json --output {model_dir}"
+            )
+
+        label_map_path = os.path.join(model_dir, "label_map.json")
+        if not os.path.exists(label_map_path):
+            raise FileNotFoundError(f"label_map.json missing from {model_dir}")
+
+        with open(label_map_path) as f:
+            raw_map = json.load(f)
+        # label_map: {"0": "atm", "1": "bnpl", ...}
+        self.id2label = {int(k): v for k, v in raw_map.items()}
+        self.label2id = {v: k for k, v in self.id2label.items()}
+        self.n_classes = len(self.id2label)
+
+        if torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+        elif torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device = torch.device("cpu")
+
+        self.tokenizer = DistilBertTokenizerFast.from_pretrained(model_dir)
+        self.model = DistilBertForSequenceClassification.from_pretrained(model_dir)
+        self.model = self.model.to(self.device)
+        self.model.eval()
+
+        self.batch_size = batch_size
+        self.max_length = max_length
+
+        # Read accuracy from training summary if available
+        summary_path = os.path.join(model_dir, "training_summary.json")
+        if os.path.exists(summary_path):
+            with open(summary_path) as f:
+                summary = json.load(f)
+            acc = summary.get("test_accuracy", "?")
+            print(f"  DistilBERT loaded from {model_dir} (test acc={acc:.4f})")
+        else:
+            print(f"  DistilBERT loaded from {model_dir}")
+
+    def predict(
+        self, merchants: List[str], amounts: Optional[List[float]] = None
+    ) -> List[str]:
+        """
+        Predict categories for a list of merchant strings.
+        Processes in batches for efficiency.
+        Returns list of category strings (same length as input).
+        """
+        all_preds = []
+        for i in range(0, len(merchants), self.batch_size):
+            batch_texts = merchants[i: i + self.batch_size]
+            encoding = self.tokenizer(
+                batch_texts,
+                truncation=True,
+                padding="max_length",
+                max_length=self.max_length,
+                return_tensors="pt",
+            )
+            input_ids = encoding["input_ids"].to(self.device)
+            attention_mask = encoding["attention_mask"].to(self.device)
+
+            with torch.no_grad():
+                logits = self.model(input_ids=input_ids,
+                                    attention_mask=attention_mask).logits
+            pred_ids = logits.argmax(dim=-1).cpu().numpy()
+
+            for j, (pred_id, merchant) in enumerate(zip(pred_ids, batch_texts)):
+                raw_cat = self.id2label[int(pred_id)]
+                # Apply amount-aware post-processing (same logic as rules layer)
+                amt = amounts[i + j] if amounts else 0.0
+                category = self._apply_amount_logic(raw_cat, merchant, amt)
+                all_preds.append(category)
+
+        return all_preds
+
+    def _apply_amount_logic(self, category: str, merchant: str, amount: float) -> str:
+        """
+        Re-apply amount-direction logic that DistilBERT cannot learn from text.
+        The model predicts the base class; this splits it using the actual amount.
+        """
+        if category in ("gambling", "gambling_win"):
+            return "gambling_win" if amount > 0 else "gambling"
+        if category in ("payday_loan", "payday_loan_deposit", "payday_loan_repayment"):
+            return "payday_loan_deposit" if amount > 0 else "payday_loan_repayment"
+        return category
+
+
+# ============================================================================
+# STEP 2B: LLM CATEGORIZER (Claude Sonnet via Anthropic API)
 # ============================================================================
 
 SYSTEM_PROMPT = """You are a financial transaction categorizer for a cash flow underwriting system.
@@ -494,21 +615,19 @@ def categorize_consumer(
     model: str = "claude-sonnet-4-20250514",
     batch_size: int = 30,
     rules_only: bool = False,
+    distilbert: Optional["DistilBERTCategorizer"] = None,
 ) -> Dict:
     """
     Categorize all transactions for one consumer using the hybrid approach.
 
-    Step 1: Try rules on every transaction
-    Step 2: Batch the unmatched ones and send to Claude
-    Step 3: Merge results
+    Fallback priority (for transactions not matched by rules):
+      1. DistilBERT (if distilbert model provided) — preferred, self-contained
+      2. Claude API  (if client provided and distilbert=None)
+      3. "other"     (if neither available)
 
-    Returns dict with:
-      - predicted_categories: list of predicted category per transaction
-      - ground_truth: list of actual category per transaction
-      - rule_matched: count of transactions matched by rules
-      - llm_matched: count sent to LLM
-      - total_input_tokens: API tokens used (input)
-      - total_output_tokens: API tokens used (output)
+    Step 1: Try rules on every transaction
+    Step 2: For unmatched, use DistilBERT or Claude (in that priority order)
+    Step 3: Merge results
     """
     transactions = consumer["transactions"]
     predicted = [None] * len(transactions)
@@ -526,43 +645,47 @@ def categorize_consumer(
     rule_matched = len(transactions) - len(unmatched_indices)
     total_in_tokens = 0
     total_out_tokens = 0
+    distilbert_matched = 0
 
-    # Step 2: LLM pass for unmatched transactions
-    if unmatched_indices and client is not None and not rules_only:
+    if unmatched_indices and not rules_only:
         unmatched_txns = [transactions[i] for i in unmatched_indices]
 
-        # Process in batches (sending too many at once can cause issues)
-        for batch_start in range(0, len(unmatched_txns), batch_size):
-            batch = unmatched_txns[batch_start:batch_start + batch_size]
-            batch_indices = unmatched_indices[batch_start:batch_start + batch_size]
+        # ---- DistilBERT fallback (preferred) ----
+        if distilbert is not None:
+            merchants = [t["merchant"] for t in unmatched_txns]
+            amounts = [t["amount"] for t in unmatched_txns]
+            bert_preds = distilbert.predict(merchants, amounts)
+            for idx, pred in zip(unmatched_indices, bert_preds):
+                predicted[idx] = pred if pred in CATEGORIES else "other"
+            distilbert_matched = len(unmatched_indices)
 
-            try:
-                results, in_tok, out_tok = categorize_batch_llm(
-                    batch, client, model
-                )
-                total_in_tokens += in_tok
-                total_out_tokens += out_tok
+        # ---- Claude API fallback ----
+        elif client is not None:
+            for batch_start in range(0, len(unmatched_txns), batch_size):
+                batch = unmatched_txns[batch_start:batch_start + batch_size]
+                batch_indices = unmatched_indices[batch_start:batch_start + batch_size]
 
-                # Map results back to original indices
-                for r in results:
-                    idx_in_batch = r["id"]
-                    if 0 <= idx_in_batch < len(batch_indices):
-                        original_idx = batch_indices[idx_in_batch]
-                        cat = r["category"]
-                        # Validate category
-                        if cat in CATEGORIES:
-                            predicted[original_idx] = cat
-                        else:
-                            predicted[original_idx] = "other"
+                try:
+                    results, in_tok, out_tok = categorize_batch_llm(
+                        batch, client, model
+                    )
+                    total_in_tokens += in_tok
+                    total_out_tokens += out_tok
 
-            except Exception as e:
-                print(f"  ⚠️  API error: {e}")
-                for idx in batch_indices:
-                    if predicted[idx] is None:
-                        predicted[idx] = "other"
+                    for r in results:
+                        idx_in_batch = r["id"]
+                        if 0 <= idx_in_batch < len(batch_indices):
+                            original_idx = batch_indices[idx_in_batch]
+                            cat = r["category"]
+                            predicted[original_idx] = cat if cat in CATEGORIES else "other"
 
-            # Rate limiting: small delay between batches
-            time.sleep(0.5)
+                except Exception as e:
+                    print(f"  ⚠️  API error: {e}")
+                    for idx in batch_indices:
+                        if predicted[idx] is None:
+                            predicted[idx] = "other"
+
+                time.sleep(0.5)
 
     # Fill any remaining None predictions with "other"
     for i in range(len(predicted)):
@@ -574,7 +697,8 @@ def categorize_consumer(
         "predicted": predicted,
         "ground_truth": ground_truth,
         "rule_matched": rule_matched,
-        "llm_matched": len(unmatched_indices),
+        "llm_matched": len(unmatched_indices) if distilbert is None else 0,
+        "distilbert_matched": distilbert_matched,
         "total_input_tokens": total_in_tokens,
         "total_output_tokens": total_out_tokens,
     }
@@ -712,6 +836,10 @@ def main():
                         help="Claude model to use")
     parser.add_argument("--rules-only", action="store_true",
                         help="Skip LLM, only use rule-based categorization")
+    parser.add_argument("--distilbert", type=str, default=None,
+                        help="Path to fine-tuned DistilBERT model directory "
+                             "(e.g. models/distilbert_categorizer/). "
+                             "When provided, uses DistilBERT instead of Claude API.")
     parser.add_argument("--noise", type=str, default="none",
                         choices=["none", "light", "medium", "heavy"],
                         help="Noise level to apply to merchant strings (default: none)")
@@ -745,22 +873,36 @@ def main():
     else:
         print("No noise applied (clean merchant names).\n")
 
-    # Initialize API client
+    # Initialize DistilBERT or Claude client
+    distilbert_model = None
     client = None
+
     if not args.rules_only:
-        if not HAS_ANTHROPIC:
-            print("⚠️  anthropic package not found. Falling back to rules-only mode.")
-            print("   Install with: pip install anthropic\n")
-            args.rules_only = True
-        else:
-            api_key = os.environ.get("ANTHROPIC_API_KEY")
-            if not api_key:
-                print("⚠️  ANTHROPIC_API_KEY not set. Falling back to rules-only mode.")
-                print("   Set with: export ANTHROPIC_API_KEY='sk-ant-...'\n")
+        if args.distilbert:
+            # DistilBERT mode: self-contained, no API key needed
+            if not HAS_DISTILBERT_DEPS:
+                print("⚠️  transformers/torch not found. Install: pip install transformers torch")
+                print("   Falling back to rules-only mode.\n")
                 args.rules_only = True
             else:
-                client = anthropic.Anthropic()
-                print(f"Using model: {args.model}")
+                print(f"Loading DistilBERT from {args.distilbert}...")
+                distilbert_model = DistilBERTCategorizer(args.distilbert)
+                print("Using DistilBERT fallback (rules → DistilBERT)\n")
+        else:
+            # Claude API mode
+            if not HAS_ANTHROPIC:
+                print("⚠️  anthropic package not found. Falling back to rules-only mode.")
+                print("   Install with: pip install anthropic\n")
+                args.rules_only = True
+            else:
+                api_key = os.environ.get("ANTHROPIC_API_KEY")
+                if not api_key:
+                    print("⚠️  ANTHROPIC_API_KEY not set. Falling back to rules-only mode.")
+                    print("   Set with: export ANTHROPIC_API_KEY='sk-ant-...'\n")
+                    args.rules_only = True
+                else:
+                    client = anthropic.Anthropic()
+                    print(f"Using Claude model: {args.model}")
 
     if args.rules_only:
         print("Running in RULES-ONLY mode (no API calls).\n")
@@ -769,7 +911,8 @@ def main():
     all_results = []
     for i, consumer in enumerate(consumers):
         result = categorize_consumer(
-            consumer, client, args.model, args.batch_size, args.rules_only
+            consumer, client, args.model, args.batch_size,
+            args.rules_only, distilbert_model,
         )
         all_results.append(result)
 

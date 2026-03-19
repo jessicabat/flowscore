@@ -11,8 +11,10 @@ the predictive lift over traditional credit scores alone.
 Models:
   1. Traditional Score Only (baseline) — logistic regression on simulated FICO
   2. Logistic Regression on cash flow features (interpretable)
-  3. XGBoost / GradientBoosting on cash flow features (performance)
-  4. Combined: traditional score + cash flow features (shows orthogonality)
+  3. XGBoost / GradientBoosting on cash flow features
+  4. LightGBM with Optuna hyperparameter tuning (primary performance model)
+  5. CatBoost with Optuna hyperparameter tuning
+  6. Combined: traditional score + best cash flow model (shows orthogonality)
 
 Business Value Analysis:
   - "Missed Opportunity": borrowers rejected by trad score who would repay
@@ -23,8 +25,8 @@ Business Value Analysis:
 Usage:
     python src/model.py --features data/features.csv --output data/model_results/
 
-Requirements (install on your machine):
-    pip install xgboost shap scikit-learn pandas numpy matplotlib
+Requirements:
+    pip install xgboost lightgbm catboost optuna shap scikit-learn pandas numpy matplotlib
 """
 
 import argparse
@@ -35,7 +37,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
@@ -55,6 +57,28 @@ except ImportError:
     print("Note: xgboost not installed. Using sklearn GradientBoosting instead.")
     print("      Install with: pip install xgboost\n")
     from sklearn.ensemble import GradientBoostingClassifier
+
+try:
+    import lightgbm as lgb
+    HAS_LGB = True
+except ImportError:
+    HAS_LGB = False
+    print("Note: lightgbm not installed. Install with: pip install lightgbm\n")
+
+try:
+    from catboost import CatBoostClassifier
+    HAS_CATBOOST = True
+except ImportError:
+    HAS_CATBOOST = False
+    print("Note: catboost not installed. Install with: pip install catboost\n")
+
+try:
+    import optuna
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    HAS_OPTUNA = True
+except ImportError:
+    HAS_OPTUNA = False
+    print("Note: optuna not installed. Install with: pip install optuna\n")
 
 try:
     import shap
@@ -118,44 +142,29 @@ def train_models(X_train, X_test, y_train, y_test, feature_names):
     """Train all models and return results dict."""
     results = {}
 
-    # ---- Model 1: Traditional Score Only (baseline) ----
-    # Use only the traditional_score feature as a predictor
-    # This simulates what a lender can do with FICO alone
-    print("\n--- Model 1: Traditional Score Only (Baseline) ---")
-    # We'll handle this separately since trad score is in metadata
-
-    # ---- Model 2: Logistic Regression on cash flow features ----
-    print("\n--- Model 2: Logistic Regression (Cash Flow Features) ---")
-    lr = LogisticRegression(
-        max_iter=1000, C=1.0, penalty="l2", random_state=42
-    )
+    # ---- Logistic Regression (interpretable baseline) ----
+    print("\n--- Logistic Regression (Cash Flow Features) ---")
+    lr = LogisticRegression(max_iter=1000, C=1.0, penalty="l2", random_state=42)
     lr.fit(X_train, y_train)
     lr_proba = lr.predict_proba(X_test)[:, 1]
     lr_auc = roc_auc_score(y_test, lr_proba)
-    print(f"  AUC-ROC: {lr_auc:.4f}")
-
-    # Cross-validation
     cv_scores = cross_val_score(lr, X_train, y_train, cv=5, scoring="roc_auc")
-    print(f"  5-fold CV AUC: {cv_scores.mean():.4f} (+/- {cv_scores.std():.4f})")
-
+    print(f"  AUC-ROC: {lr_auc:.4f}  |  5-fold CV: {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
     results["logistic_regression"] = {
-        "model": lr,
-        "proba": lr_proba,
-        "auc": lr_auc,
-        "cv_auc_mean": cv_scores.mean(),
-        "cv_auc_std": cv_scores.std(),
+        "model": lr, "proba": lr_proba, "auc": lr_auc,
+        "cv_auc_mean": cv_scores.mean(), "cv_auc_std": cv_scores.std(),
     }
 
-    # ---- Model 3: XGBoost / GradientBoosting ----
-    print("\n--- Model 3: Gradient Boosting (Cash Flow Features) ---")
+    # ---- XGBoost ----
+    print("\n--- XGBoost (Cash Flow Features) ---")
     if HAS_XGB:
         gbm = xgb.XGBClassifier(
             n_estimators=200, max_depth=5, learning_rate=0.1,
             subsample=0.8, colsample_bytree=0.8,
             random_state=42, eval_metric="auc",
-            use_label_encoder=False,
         )
     else:
+        from sklearn.ensemble import GradientBoostingClassifier
         gbm = GradientBoostingClassifier(
             n_estimators=200, max_depth=5, learning_rate=0.1,
             subsample=0.8, random_state=42,
@@ -163,40 +172,59 @@ def train_models(X_train, X_test, y_train, y_test, feature_names):
     gbm.fit(X_train, y_train)
     gbm_proba = gbm.predict_proba(X_test)[:, 1]
     gbm_auc = roc_auc_score(y_test, gbm_proba)
-    print(f"  AUC-ROC: {gbm_auc:.4f}")
-
     cv_scores_gbm = cross_val_score(gbm, X_train, y_train, cv=5, scoring="roc_auc")
-    print(f"  5-fold CV AUC: {cv_scores_gbm.mean():.4f} (+/- {cv_scores_gbm.std():.4f})")
-
+    print(f"  AUC-ROC: {gbm_auc:.4f}  |  5-fold CV: {cv_scores_gbm.mean():.4f} ± {cv_scores_gbm.std():.4f}")
     results["gradient_boosting"] = {
-        "model": gbm,
-        "proba": gbm_proba,
-        "auc": gbm_auc,
-        "cv_auc_mean": cv_scores_gbm.mean(),
-        "cv_auc_std": cv_scores_gbm.std(),
+        "model": gbm, "proba": gbm_proba, "auc": gbm_auc,
+        "cv_auc_mean": cv_scores_gbm.mean(), "cv_auc_std": cv_scores_gbm.std(),
     }
 
-    # ---- Feature Importance ----
-    print("\n--- Feature Importance (Top 15) ---")
-    if HAS_XGB:
-        importances = gbm.feature_importances_
-    else:
-        importances = gbm.feature_importances_
+    # ---- LightGBM + Optuna ----
+    lgb_model, lgb_params = tune_lightgbm(X_train, y_train, n_trials=40)
+    if lgb_model is not None:
+        lgb_proba = lgb_model.predict_proba(X_test)[:, 1]
+        lgb_auc = roc_auc_score(y_test, lgb_proba)
+        print(f"  Test AUC-ROC: {lgb_auc:.4f}")
+        results["lightgbm_optuna"] = {
+            "model": lgb_model, "proba": lgb_proba, "auc": lgb_auc,
+            "best_params": lgb_params,
+        }
 
-    imp_idx = np.argsort(importances)[::-1][:15]
-    for rank, idx in enumerate(imp_idx):
-        print(f"  {rank+1:2d}. {feature_names[idx]:40s} {importances[idx]:.4f}")
+    # ---- CatBoost + Optuna ----
+    cb_model, cb_params = tune_catboost(X_train, y_train, n_trials=30)
+    if cb_model is not None:
+        cb_proba = cb_model.predict_proba(X_test)[:, 1]
+        cb_auc = roc_auc_score(y_test, cb_proba)
+        print(f"  Test AUC-ROC: {cb_auc:.4f}")
+        results["catboost_optuna"] = {
+            "model": cb_model, "proba": cb_proba, "auc": cb_auc,
+            "best_params": cb_params,
+        }
 
-    results["feature_importance"] = {
-        feature_names[i]: float(importances[i]) for i in imp_idx
-    }
+    # ---- Feature Importance (from best tree model) ----
+    # Use LightGBM if available, else XGBoost
+    best_tree = (results.get("lightgbm_optuna") or
+                 results.get("catboost_optuna") or
+                 results.get("gradient_boosting"))
+    if best_tree:
+        print("\n--- Feature Importance (Top 15) ---")
+        importances = best_tree["model"].feature_importances_
+        imp_idx = np.argsort(importances)[::-1][:15]
+        for rank, idx in enumerate(imp_idx):
+            print(f"  {rank+1:2d}. {feature_names[idx]:40s} {importances[idx]:.4f}")
+        results["feature_importance"] = {
+            feature_names[i]: float(importances[i]) for i in imp_idx
+        }
 
-    # SHAP values (if available)
-    if HAS_SHAP:
+    # ---- SHAP Analysis (on best model) ----
+    if HAS_SHAP and best_tree:
         print("\n--- SHAP Analysis ---")
         try:
-            explainer = shap.TreeExplainer(gbm)
+            explainer = shap.TreeExplainer(best_tree["model"])
             shap_values = explainer.shap_values(X_test)
+            # LightGBM returns list for binary; take positive class
+            if isinstance(shap_values, list):
+                shap_values = shap_values[1]
             mean_abs_shap = np.abs(shap_values).mean(axis=0)
             shap_idx = np.argsort(mean_abs_shap)[::-1][:15]
             print("  Top 15 features by mean |SHAP|:")
@@ -233,30 +261,31 @@ def train_traditional_only(meta_train, meta_test, y_train, y_test):
     return {"model": lr_trad, "proba": trad_proba, "auc": trad_auc}
 
 
-def train_combined(X_train, X_test, meta_train, meta_test, y_train, y_test):
+def train_combined(X_train, X_test, meta_train, meta_test, y_train, y_test,
+                   best_params_lgb=None):
     """Train a model using both cash flow features AND traditional score."""
-    print("\n--- Model 4: Combined (Cash Flow + Traditional Score) ---")
+    print("\n--- Model: Combined (Cash Flow + Traditional Score) ---")
 
     trad_train = meta_train["_traditional_score"].values.reshape(-1, 1)
     trad_test = meta_test["_traditional_score"].values.reshape(-1, 1)
 
-    # Scale traditional score to match other features
     scaler_trad = StandardScaler()
     trad_train_s = scaler_trad.fit_transform(trad_train)
     trad_test_s = scaler_trad.transform(trad_test)
 
-    # Concatenate
     X_train_combined = np.hstack([X_train, trad_train_s])
     X_test_combined = np.hstack([X_test, trad_test_s])
 
-    if HAS_XGB:
+    if HAS_LGB and best_params_lgb:
+        combined = lgb.LGBMClassifier(**best_params_lgb)  # random_state/verbose already in params
+    elif HAS_XGB:
         combined = xgb.XGBClassifier(
             n_estimators=200, max_depth=5, learning_rate=0.1,
             subsample=0.8, colsample_bytree=0.8,
             random_state=42, eval_metric="auc",
-            use_label_encoder=False,
         )
     else:
+        from sklearn.ensemble import GradientBoostingClassifier
         combined = GradientBoostingClassifier(
             n_estimators=200, max_depth=5, learning_rate=0.1,
             subsample=0.8, random_state=42,
@@ -268,6 +297,115 @@ def train_combined(X_train, X_test, meta_train, meta_test, y_train, y_test):
     print(f"  AUC-ROC: {comb_auc:.4f}")
 
     return {"model": combined, "proba": comb_proba, "auc": comb_auc}
+
+
+# ============================================================================
+# OPTUNA-TUNED MODELS
+# ============================================================================
+
+def tune_lightgbm(X_train, y_train, n_trials=40):
+    """Tune LightGBM with Optuna. Returns best model and params."""
+    if not HAS_LGB:
+        print("  LightGBM not available. Skipping.")
+        return None, {}
+    if not HAS_OPTUNA:
+        print("  Optuna not available. Training LightGBM with defaults.")
+        model = lgb.LGBMClassifier(
+            n_estimators=500, max_depth=5, learning_rate=0.05,
+            num_leaves=31, min_child_samples=50,
+            subsample=0.8, colsample_bytree=0.8,
+            class_weight="balanced", random_state=42, verbose=-1,
+        )
+        model.fit(X_train, y_train)
+        return model, {}
+
+    print(f"\n--- LightGBM + Optuna ({n_trials} trials) ---")
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+    def objective(trial):
+        params = {
+            "n_estimators": trial.suggest_int("n_estimators", 200, 1000),
+            "max_depth": trial.suggest_int("max_depth", 3, 7),
+            "num_leaves": trial.suggest_int("num_leaves", 15, 127),
+            "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.15, log=True),
+            "min_child_samples": trial.suggest_int("min_child_samples", 20, 100),
+            "subsample": trial.suggest_float("subsample", 0.6, 1.0),
+            "colsample_bytree": trial.suggest_float("colsample_bytree", 0.6, 1.0),
+            "reg_alpha": trial.suggest_float("reg_alpha", 1e-8, 1.0, log=True),
+            "reg_lambda": trial.suggest_float("reg_lambda", 1e-8, 1.0, log=True),
+            "class_weight": "balanced",
+            "random_state": 42,
+            "verbose": -1,
+        }
+        model = lgb.LGBMClassifier(**params)
+        scores = cross_val_score(model, X_train, y_train, cv=cv,
+                                 scoring="roc_auc", n_jobs=-1)
+        return scores.mean()
+
+    study = optuna.create_study(direction="maximize",
+                                sampler=optuna.samplers.TPESampler(seed=42))
+    study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
+
+    best_params = study.best_params
+    best_params.update({"class_weight": "balanced", "random_state": 42, "verbose": -1})
+    print(f"  Best CV AUC: {study.best_value:.4f}")
+    print(f"  Best params: n_estimators={best_params['n_estimators']}, "
+          f"max_depth={best_params['max_depth']}, "
+          f"lr={best_params['learning_rate']:.4f}")
+
+    model = lgb.LGBMClassifier(**best_params)
+    model.fit(X_train, y_train)
+    return model, best_params
+
+
+def tune_catboost(X_train, y_train, n_trials=30):
+    """Tune CatBoost with Optuna. Returns best model and params."""
+    if not HAS_CATBOOST:
+        print("  CatBoost not available. Skipping.")
+        return None, {}
+    if not HAS_OPTUNA:
+        print("  Optuna not available. Training CatBoost with defaults.")
+        model = CatBoostClassifier(
+            iterations=500, depth=6, learning_rate=0.05,
+            random_seed=42, verbose=0, auto_class_weights="Balanced",
+        )
+        model.fit(X_train, y_train)
+        return model, {}
+
+    print(f"\n--- CatBoost + Optuna ({n_trials} trials) ---")
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+    def objective(trial):
+        params = {
+            "iterations": trial.suggest_int("iterations", 200, 800),
+            "depth": trial.suggest_int("depth", 4, 8),
+            "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.15, log=True),
+            "l2_leaf_reg": trial.suggest_float("l2_leaf_reg", 1.0, 10.0),
+            "bagging_temperature": trial.suggest_float("bagging_temperature", 0.0, 1.0),
+            "random_strength": trial.suggest_float("random_strength", 1e-8, 10.0, log=True),
+            "auto_class_weights": "Balanced",
+            "random_seed": 42,
+            "verbose": 0,
+        }
+        model = CatBoostClassifier(**params)
+        scores = cross_val_score(model, X_train, y_train, cv=cv,
+                                 scoring="roc_auc", n_jobs=1)
+        return scores.mean()
+
+    study = optuna.create_study(direction="maximize",
+                                sampler=optuna.samplers.TPESampler(seed=42))
+    study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
+
+    best_params = study.best_params
+    best_params.update({"auto_class_weights": "Balanced", "random_seed": 42, "verbose": 0})
+    print(f"  Best CV AUC: {study.best_value:.4f}")
+    print(f"  Best params: iterations={best_params['iterations']}, "
+          f"depth={best_params['depth']}, "
+          f"lr={best_params['learning_rate']:.4f}")
+
+    model = CatBoostClassifier(**best_params)
+    model.fit(X_train, y_train)
+    return model, best_params
 
 
 # ============================================================================
@@ -291,6 +429,16 @@ def calibrate_score(proba, min_score=300, max_score=850):
     return min_score + (max_score - min_score) * (1 - proba)
 
 
+def best_cashflow_model(results_dict):
+    """Return the highest-AUC cash flow model name and results."""
+    candidates = ["catboost_optuna", "lightgbm_optuna", "gradient_boosting",
+                  "logistic_regression"]
+    for name in candidates:
+        if name in results_dict:
+            return name, results_dict[name]
+    return None, None
+
+
 def print_model_comparison(results_dict):
     """Print a comparison table of all models."""
     print(f"\n{'='*70}")
@@ -305,18 +453,19 @@ def print_model_comparison(results_dict):
         gini = compute_gini(auc)
         print(f"  {name:<45s} {auc:>7.4f} {ks:>7.4f} {gini:>7.4f}")
 
-    # Compute lift
-    if "traditional_only" in results_dict and "gradient_boosting" in results_dict:
-        trad_auc = results_dict["traditional_only"]["auc"]
-        gb_auc = results_dict["gradient_boosting"]["auc"]
-        lift = (gb_auc - trad_auc) / trad_auc * 100
-        print(f"\n  Cash flow model AUC lift over traditional: {lift:+.1f}%")
-
-    if "traditional_only" in results_dict and "combined" in results_dict:
-        trad_auc = results_dict["traditional_only"]["auc"]
-        comb_auc = results_dict["combined"]["auc"]
-        lift = (comb_auc - trad_auc) / trad_auc * 100
-        print(f"  Combined model AUC lift over traditional:  {lift:+.1f}%")
+    trad_auc = results_dict.get("traditional_only", {}).get("auc")
+    if trad_auc:
+        best_name, best_res = best_cashflow_model(
+            {k: v for k, v in results_dict.items() if k != "traditional_only"
+             and not k.startswith("combined")}
+        )
+        if best_name:
+            lift = (best_res["auc"] - trad_auc) / trad_auc * 100
+            print(f"\n  Best cash flow model ({best_name}) lift over traditional: {lift:+.1f}%")
+        for comb_key in [k for k in results_dict if k.startswith("combined")]:
+            comb_auc = results_dict[comb_key]["auc"]
+            lift = (comb_auc - trad_auc) / trad_auc * 100
+            print(f"  Combined model lift over traditional:  {lift:+.1f}%")
 
 
 # ============================================================================
@@ -703,45 +852,69 @@ def main():
 
     model_results = train_models(X_train, X_test, y_train, y_test, feat_names)
 
+    # Get best LightGBM params for combined model (reuses tuned hyperparams)
+    lgb_params = (model_results.get("lightgbm_optuna", {}) or {}).get("best_params", None)
     combined_results = train_combined(
-        X_train, X_test, meta_train, meta_test, y_train, y_test
+        X_train, X_test, meta_train, meta_test, y_train, y_test,
+        best_params_lgb=lgb_params,
     )
     combined_results["y_test"] = y_test
 
-    # Collect for comparison
-    all_results = {
-        "traditional_only": trad_results,
-        "logistic_regression": {
-            **model_results["logistic_regression"], "y_test": y_test
-        },
-        "gradient_boosting": {
-            **model_results["gradient_boosting"], "y_test": y_test
-        },
-        "combined (trad + cash flow)": combined_results,
-    }
+    # Collect all models for comparison table
+    all_results = {"traditional_only": trad_results}
+    for key in ["logistic_regression", "gradient_boosting",
+                "lightgbm_optuna", "catboost_optuna"]:
+        if key in model_results:
+            all_results[key] = {**model_results[key], "y_test": y_test}
+    all_results["combined (trad + best CF)"] = combined_results
 
     print_model_comparison(all_results)
+
+    # Identify best cash flow model for business value / FlowScores
+    cf_candidates = {k: v for k, v in all_results.items()
+                     if k not in ("traditional_only",) and not k.startswith("combined")}
+    primary_cf_name, primary_cf = max(cf_candidates.items(), key=lambda x: x[1]["auc"])
+    print(f"\n  Primary cash flow model for business analysis: {primary_cf_name} "
+          f"(AUC={primary_cf['auc']:.4f})")
 
     # Business value analysis
     biz = business_value_analysis(
         y_test,
         trad_results["proba"],
-        model_results["gradient_boosting"]["proba"],
+        primary_cf["proba"],
         meta_test["_traditional_score"].values,
         args.output,
     )
 
     # Generate plots
     print(f"\n--- Generating Plots ---")
-    plot_results = dict(all_results)
-    plot_results["_feature_importance"] = model_results.get("feature_importance", {})
     generate_plots(all_results, biz, args.output)
 
     # Generate FlowScores
     scores_df = generate_flowscores(
-        y_test, model_results["gradient_boosting"]["proba"],
-        meta_test, args.output,
+        y_test, primary_cf["proba"], meta_test, args.output,
     )
+
+    # Save trained model bundle for Gradio demo
+    try:
+        import joblib
+        bundle = {
+            "model": primary_cf["model"],
+            "scaler": scaler,
+            "feature_names": feat_names,
+            # Population means for features the demo can't compute from simplified inputs
+            "feature_means": {
+                name: float(df[name].mean())
+                for name in feat_names
+                if name in df.columns
+            },
+        }
+        bundle_path = os.path.join(args.output, "model_bundle.joblib")
+        joblib.dump(bundle, bundle_path)
+        print(f"\nModel bundle saved to {bundle_path} (for Gradio demo)")
+    except ImportError:
+        print("\nNote: joblib not installed, model bundle not saved. "
+              "Run: pip install joblib")
 
     # Save all results as JSON
     summary = {
@@ -754,6 +927,10 @@ def main():
             for name, res in all_results.items()
         },
         "feature_importance": model_results.get("feature_importance", {}),
+        "best_params": {
+            "lightgbm": model_results.get("lightgbm_optuna", {}).get("best_params", {}),
+            "catboost": model_results.get("catboost_optuna", {}).get("best_params", {}),
+        },
         "business_value": biz,
     }
 
@@ -763,18 +940,25 @@ def main():
     print(f"\nFull results saved to {json_path}")
 
     # Final summary
+    trad = all_results["traditional_only"]
+    comb = all_results["combined (trad + best CF)"]
     print(f"\n{'='*70}")
     print(f"FLOWSCORE PROJECT — FINAL SUMMARY")
     print(f"{'='*70}")
-    gb = all_results["gradient_boosting"]
-    trad = all_results["traditional_only"]
-    comb = all_results["combined (trad + cash flow)"]
-    print(f"  Traditional score AUC:     {trad['auc']:.4f}")
-    print(f"  Cash flow model AUC:       {gb['auc']:.4f}  ({(gb['auc']-trad['auc'])/trad['auc']*100:+.1f}% lift)")
-    print(f"  Combined model AUC:        {comb['auc']:.4f}  ({(comb['auc']-trad['auc'])/trad['auc']*100:+.1f}% lift)")
-    print(f"  Missed opportunity:        {biz['missed_opportunity']['would_repay']} good borrowers rejected by trad score")
-    print(f"  Avoidable risk:            {biz['avoidable_risk']['defaulted']} bad borrowers approved by trad score")
-    print(f"\n  → Cash flow scoring finds creditworthy borrowers traditional scores miss,")
+    print(f"  Traditional score AUC:       {trad['auc']:.4f}")
+    for key in ["logistic_regression", "gradient_boosting",
+                "lightgbm_optuna", "catboost_optuna"]:
+        if key in all_results:
+            a = all_results[key]["auc"]
+            print(f"  {key:<30s} AUC: {a:.4f}  ({(a-trad['auc'])/trad['auc']*100:+.1f}% lift)")
+    print(f"  Combined model AUC:          {comb['auc']:.4f}  "
+          f"({(comb['auc']-trad['auc'])/trad['auc']*100:+.1f}% lift)")
+    print(f"  Missed opportunity:          "
+          f"{biz['missed_opportunity']['would_repay']} good borrowers rejected by trad score")
+    print(f"  Avoidable risk:              "
+          f"{biz['avoidable_risk']['defaulted']} bad borrowers approved by trad score")
+    print(f"\n  → Best model: {primary_cf_name} (AUC={primary_cf['auc']:.4f})")
+    print(f"    Cash flow scoring finds creditworthy borrowers traditional scores miss,")
     print(f"    and catches risky borrowers traditional scores approve.")
 
 

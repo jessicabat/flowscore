@@ -1,5 +1,31 @@
+# Secrets
 .env
+
+# Large raw data (regenerate with generate_synthetic_data.py)
 data/flowscore_dataset.json
 data/features.csv
-plan.md
+data/flowscore_sample.json
+data/dataset_stats.json
+
+# Intermediate categorization test outputs (regenerate with categorizer.py)
+data/results_*.json
+data/categorized_*.json
+
+# Large model weights (255 MB — not committable without LFS)
+*.safetensors
+
+# CatBoost training artifacts
+catboost_info/
+
+# Python bytecode
+__pycache__/
 src/__pycache__/
+*.pyc
+*.pyo
+
+# Claude Code project settings
+.claude/
+
+# Obsolete files
+requirements_space.txt
+plan.md

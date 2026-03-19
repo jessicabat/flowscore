@@ -1,0 +1,284 @@
+{
+  "threshold": 600,
+  "metrics_by_archetype": [
+    {
+      "archetype": "stable_salaried",
+      "label": "Stable Salaried",
+      "n": 384,
+      "actual_default_rate": 0.0833,
+      "approval_rate_flow": 0.9688,
+      "approval_rate_trad": 1.0,
+      "approved_default_rate": 0.086,
+      "fpr": 1.0,
+      "fnr": 0.0341,
+      "benefit_ratio": 0.9688
+    },
+    {
+      "archetype": "high_earner_high_spender",
+      "label": "High Earner",
+      "n": 183,
+      "actual_default_rate": 0.0929,
+      "approval_rate_flow": 0.9672,
+      "approval_rate_trad": 1.0,
+      "approved_default_rate": 0.0904,
+      "fpr": 0.9412,
+      "fnr": 0.0301,
+      "benefit_ratio": 0.9672
+    },
+    {
+      "archetype": "thin_file_newcomer",
+      "label": "Thin File / Newcomer",
+      "n": 155,
+      "actual_default_rate": 0.1548,
+      "approval_rate_flow": 0.9484,
+      "approval_rate_trad": 0.0323,
+      "approved_default_rate": 0.1565,
+      "fpr": 0.9583,
+      "fnr": 0.0534,
+      "benefit_ratio": 29.4
+    },
+    {
+      "archetype": "gig_worker",
+      "label": "Gig Worker",
+      "n": 195,
+      "actual_default_rate": 0.3128,
+      "approval_rate_flow": 0.3333,
+      "approval_rate_trad": 0.559,
+      "approved_default_rate": 0.2615,
+      "fpr": 0.2787,
+      "fnr": 0.6418,
+      "benefit_ratio": 0.5963
+    },
+    {
+      "archetype": "overextended",
+      "label": "Overextended",
+      "n": 149,
+      "actual_default_rate": 0.4966,
+      "approval_rate_flow": 0.047,
+      "approval_rate_trad": 0.651,
+      "approved_default_rate": 0.4286,
+      "fpr": 0.0405,
+      "fnr": 0.9467,
+      "benefit_ratio": 0.0722
+    },
+    {
+      "archetype": "financially_stressed",
+      "label": "Financially Stressed",
+      "n": 184,
+      "actual_default_rate": 0.5707,
+      "approval_rate_flow": 0.0,
+      "approval_rate_trad": 0.038,
+      "approved_default_rate": 0.0,
+      "fpr": 0.0,
+      "fnr": 1.0,
+      "benefit_ratio": 0.0
+    }
+  ],
+  "adverse_impact_ratios": [
+    {
+      "archetype": "stable_salaried",
+      "label": "Stable Salaried",
+      "approval_rate_flow": 0.9688,
+      "approval_rate_trad": 1.0,
+      "air": 1.0
+    },
+    {
+      "archetype": "high_earner_high_spender",
+      "label": "High Earner",
+      "approval_rate_flow": 0.9672,
+      "approval_rate_trad": 1.0,
+      "air": 0.9983484723369116
+    },
+    {
+      "archetype": "thin_file_newcomer",
+      "label": "Thin File / Newcomer",
+      "approval_rate_flow": 0.9484,
+      "approval_rate_trad": 0.0323,
+      "air": 0.9789430222956235
+    },
+    {
+      "archetype": "gig_worker",
+      "label": "Gig Worker",
+      "approval_rate_flow": 0.3333,
+      "approval_rate_trad": 0.559,
+      "air": 0.3440338563170933
+    },
+    {
+      "archetype": "overextended",
+      "label": "Overextended",
+      "approval_rate_flow": 0.047,
+      "approval_rate_trad": 0.651,
+      "air": 0.04851362510322048
+    },
+    {
+      "archetype": "financially_stressed",
+      "label": "Financially Stressed",
+      "approval_rate_flow": 0.0,
+      "approval_rate_trad": 0.038,
+      "air": 0.0
+    }
+  ],
+  "calibration": [
+    {
+      "score_bin": 0,
+      "archetype": "financially_stressed",
+      "n": 179,
+      "default_rate": 0.5698324022346368,
+      "mean_score": 417.70949720670393
+    },
+    {
+      "score_bin": 0,
+      "archetype": "gig_worker",
+      "n": 8,
+      "default_rate": 0.25,
+      "mean_score": 452.625
+    },
+    {
+      "score_bin": 0,
+      "archetype": "overextended",
+      "n": 75,
+      "default_rate": 0.5066666666666667,
+      "mean_score": 452.68
+    },
+    {
+      "score_bin": 1,
+      "archetype": "financially_stressed",
+      "n": 5,
+      "default_rate": 0.6,
+      "mean_score": 479.0
+    },
+    {
+      "score_bin": 1,
+      "archetype": "gig_worker",
+      "n": 78,
+      "default_rate": 0.358974358974359,
+      "mean_score": 514.7435897435897
+    },
+    {
+      "score_bin": 1,
+      "archetype": "high_earner_high_spender",
+      "n": 1,
+      "default_rate": 1.0,
+      "mean_score": 528.0
+    },
+    {
+      "score_bin": 1,
+      "archetype": "overextended",
+      "n": 58,
+      "default_rate": 0.5172413793103449,
+      "mean_score": 491.5
+    },
+    {
+      "score_bin": 1,
+      "archetype": "stable_salaried",
+      "n": 3,
+      "default_rate": 0.0,
+      "mean_score": 516.0
+    },
+    {
+      "score_bin": 1,
+      "archetype": "thin_file_newcomer",
+      "n": 2,
+      "default_rate": 0.5,
+      "mean_score": 520.0
+    },
+    {
+      "score_bin": 2,
+      "archetype": "gig_worker",
+      "n": 61,
+      "default_rate": 0.3114754098360656,
+      "mean_score": 583.8524590163935
+    },
+    {
+      "score_bin": 2,
+      "archetype": "high_earner_high_spender",
+      "n": 5,
+      "default_rate": 0.0,
+      "mean_score": 580.8
+    },
+    {
+      "score_bin": 2,
+      "archetype": "overextended",
+      "n": 13,
+      "default_rate": 0.3076923076923077,
+      "mean_score": 576.2307692307693
+    },
+    {
+      "score_bin": 2,
+      "archetype": "stable_salaried",
+      "n": 17,
+      "default_rate": 0.0,
+      "mean_score": 599.7647058823529
+    },
+    {
+      "score_bin": 2,
+      "archetype": "thin_file_newcomer",
+      "n": 10,
+      "default_rate": 0.1,
+      "mean_score": 589.7
+    },
+    {
+      "score_bin": 3,
+      "archetype": "gig_worker",
+      "n": 46,
+      "default_rate": 0.2391304347826087,
+      "mean_score": 651.1739130434783
+    },
+    {
+      "score_bin": 3,
+      "archetype": "high_earner_high_spender",
+      "n": 29,
+      "default_rate": 0.0,
+      "mean_score": 680.7931034482758
+    },
+    {
+      "score_bin": 3,
+      "archetype": "overextended",
+      "n": 3,
+      "default_rate": 0.6666666666666666,
+      "mean_score": 675.0
+    },
+    {
+      "score_bin": 3,
+      "archetype": "stable_salaried",
+      "n": 99,
+      "default_rate": 0.12121212121212122,
+      "mean_score": 666.8282828282828
+    },
+    {
+      "score_bin": 3,
+      "archetype": "thin_file_newcomer",
+      "n": 101,
+      "default_rate": 0.13861386138613863,
+      "mean_score": 665.4257425742575
+    },
+    {
+      "score_bin": 4,
+      "archetype": "gig_worker",
+      "n": 2,
+      "default_rate": 0.5,
+      "mean_score": 718.5
+    },
+    {
+      "score_bin": 4,
+      "archetype": "high_earner_high_spender",
+      "n": 148,
+      "default_rate": 0.10810810810810811,
+      "mean_score": 728.5337837837837
+    },
+    {
+      "score_bin": 4,
+      "archetype": "stable_salaried",
+      "n": 265,
+      "default_rate": 0.07547169811320754,
+      "mean_score": 736.3132075471698
+    },
+    {
+      "score_bin": 4,
+      "archetype": "thin_file_newcomer",
+      "n": 42,
+      "default_rate": 0.19047619047619047,
+      "mean_score": 724.8809523809524
+    }
+  ]
+}

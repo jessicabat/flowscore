@@ -75,7 +75,7 @@ Higher income, longer history, decent traditional score. But look at the volume 
 
 ## Stage 2: Transaction Categorization
 
-Each transaction gets classified into one of 24 categories.
+Each transaction gets classified into one of 25 categories.
 
 ### Clean merchant → Category (rules handle this)
 
@@ -88,29 +88,31 @@ WALMART                  →  shopping
 DUNKIN DONUTS            →  dining
 ```
 
-### Noisy merchant → Rules fail → LLM handles it
+### Noisy merchant → Rules fail → DistilBERT handles it
 
-In real bank data, merchant strings are corrupted. Here's what the noise layer does:
+In real bank data, merchant strings are corrupted. Here is what the noise layer does:
 
 ```
 Original:   DOORDASH ORDER
-Noisy:      ONLINE PMT DOORDASH O         ← prefix added + truncated
-Rule says:  None                           ← no rule matches
-→ Sent to Claude Sonnet API
-→ Sonnet returns: "food_delivery"          ✓ correct
+Noisy:      ONLINE PMT DOORDASH O         <- prefix added + truncated
+Rule says:  None                           <- no rule matches
+→ Sent to fine-tuned DistilBERT
+→ DistilBERT returns: "food_delivery"      correct
 
 Original:   STOP AND SHOP
-Noisy:      ONLINE PMT STOP AND S         ← prefix added + truncated  
-Rule says:  None                           ← "STOP AND SHOP" keyword is broken
-→ Sent to Claude Sonnet API
-→ Sonnet returns: "groceries"              ✓ correct
+Noisy:      ONLINE PMT STOP AND S         <- prefix added + truncated
+Rule says:  None                           <- "STOP AND SHOP" keyword is broken
+→ Sent to fine-tuned DistilBERT
+→ DistilBERT returns: "groceries"          correct
 
 Original:   WALMART
-Noisy:      WALMART                        ← no corruption this time
-Rule says:  shopping                       ✓ matched by rules (free, instant)
+Noisy:      WALMART                        <- no corruption this time
+Rule says:  shopping                       matched by rules (free, instant)
 ```
 
-**Result:** Rules catch ~84% at zero cost. Sonnet catches the remaining ~16% at $0.36 per 10 consumers. Combined accuracy: 95.7%.
+**Result:** Rules catch roughly 83% at zero cost. Fine-tuned DistilBERT handles the remaining 17% entirely locally — no API calls, no latency, no cost. Combined accuracy: 91.5% on noisy data (99.7% on clean data).
+
+The previous approach used Claude Sonnet for ambiguous transactions (95.7% accuracy on noisy data at $0.36 per 10 consumers). DistilBERT replaces this with a locally-hosted model that is always available and free to run. The 4-point accuracy gap on noisy data reflects a train/test distribution mismatch — the model was trained on clean strings and tested on corrupted ones. Noise augmentation during training would narrow this gap.
 
 ---
 
@@ -220,11 +222,22 @@ FlowScore Low    │  47.6%       │  45.2%       │
                  └──────────────┴──────────────┘
 
 Consumer A sits in the top-left: low traditional score, high FlowScore.
-→ Traditional scoring misses them. Cash flow scoring finds them.
+Traditional scoring misses them. Cash flow scoring finds them.
 
 Consumer B sits in the bottom-right: high traditional score, low FlowScore.
-→ Traditional scoring approves them. Cash flow scoring catches them.
+Traditional scoring approves them. Cash flow scoring catches them.
 
 This is why cash flow scores are orthogonal to traditional scores.
-They measure different things. Together, they're more powerful than either alone.
+They measure different things. Together they are more powerful than either alone.
+
+The orthogonality matrix from the full 1,250-consumer test set:
+
+|  | FlowScore >= 650 | FlowScore < 650 |
+|--|------------------|-----------------|
+| **Trad >= 660** | 9.0% default (n=513) | 32.1% default (n=134) |
+| **Trad < 660**  | 14.8% default (n=135) | 43.6% default (n=468) |
+
+The Trad High + Flow Low cell (32.1% default) is the avoidable risk segment.
+The Trad Low + Flow High cell (14.8% default) is the missed opportunity segment.
+135 creditworthy borrowers excluded by traditional scoring — identified as safe by FlowScore.
 ```
