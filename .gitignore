@@ -26,6 +26,5 @@ src/__pycache__/
 # Claude Code project settings
 .claude/
 
-# Obsolete files
-requirements_space.txt
+# Private/internal docs
 plan.md
