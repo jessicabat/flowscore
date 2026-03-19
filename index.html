@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowScore: Cash Flow Credit Scoring</title>
+
+    <meta name="description" content="An end-to-end ML pipeline that predicts credit default risk from bank transaction data alone. No credit bureau required. 0.761 AUC, 21% loss reduction.">
+    <meta name="author" content="Jessica">
+
+    <meta property="og:type"        content="website">
+    <meta property="og:title"       content="FlowScore: Credit Scoring from Cash Flow Data">
+    <meta property="og:description" content="61% of borrowers rejected by traditional scores would actually repay. This pipeline finds them — using only bank transactions, no credit bureau needed. Built on rules + Claude Sonnet + XGBoost.">
+    <meta property="og:url"         content="https://jessicabat.github.io/flowscore/">
+
+    <meta name="twitter:card"        content="summary">
+    <meta name="twitter:title"       content="FlowScore: Credit Scoring from Cash Flow Data">
+    <meta name="twitter:description" content="61% of borrowers rejected by traditional scores would actually repay. End-to-end ML pipeline: transaction categorization (rules + LLM) → 45 behavioral features → credit risk model. 0.761 AUC, 21% loss reduction.">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:        #0f172a;
+            --navy-light:  #1e293b;
+            --navy-mid:    #334155;
+            --slate:       #64748b;
+            --slate-light: #94a3b8;
+            --off-white:   #f1f5f9;
+            --white:       #ffffff;
+            --blue:        #3b82f6;
+            --blue-light:  #60a5fa;
+            --blue-glow:   rgba(59,130,246,0.15);
+            --green:       #22c55e;
+            --green-soft:  #4ade80;
+            --red:         #ef4444;
+            --amber:       #f59e0b;
+            --font: 'DM Sans', -apple-system, sans-serif;
+            --mono: 'DM Mono', 'SF Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font);
+            background: var(--navy);
+            color: var(--off-white);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── NAV ─── */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 0.9rem 2rem;
+            background: rgba(15,23,42,0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em; }
+        .logo span { color: var(--blue); }
+
+        .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        .nav-links a {
+            color: var(--slate-light); text-decoration: none;
+            font-size: 0.84rem; font-weight: 500; transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--white); }
+        .nav-links .gh-btn {
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 0.32rem 0.85rem; border-radius: 6px;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .nav-links .gh-btn:hover { border-color: var(--blue); color: var(--blue-light); }
+
+        /* hamburger */
+        .hamburger {
+            display: none; flex-direction: column; gap: 5px;
+            background: none; border: none; cursor: pointer; padding: 4px;
+        }
+        .hamburger span {
+            display: block; width: 22px; height: 2px;
+            background: var(--slate-light); border-radius: 2px; transition: all 0.3s;
+        }
+        .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .mobile-menu {
+            display: none; position: fixed; top: 57px; left: 0; right: 0;
+            background: rgba(15,23,42,0.98);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            z-index: 99; padding: 1rem 2rem 1.5rem;
+            flex-direction: column; gap: 0.1rem;
+        }
+        .mobile-menu.open { display: flex; }
+        .mobile-menu a {
+            color: var(--slate-light); text-decoration: none;
+            font-size: 1rem; font-weight: 500;
+            padding: 0.65rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: color 0.2s;
+        }
+        .mobile-menu a:last-child { border-bottom: none; }
+        .mobile-menu a:hover { color: var(--white); }
+
+        /* ─── HERO ─── */
+        .hero {
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            text-align: center;
+            padding: 7rem 2rem 5rem;
+            position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 50% 30%, var(--blue-glow) 0%, transparent 62%);
+            pointer-events: none;
+        }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: rgba(59,130,246,0.1);
+            border: 1px solid rgba(59,130,246,0.25);
+            border-radius: 100px; padding: 0.35rem 1rem;
+            font-size: 0.75rem; font-weight: 600;
+            color: var(--blue-light); letter-spacing: 0.06em;
+            text-transform: uppercase; margin-bottom: 1.5rem;
+        }
+        .badge .dot {
+            width: 6px; height: 6px;
+            background: var(--blue-light); border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+        .hero h1 {
+            font-size: clamp(2.4rem, 6vw, 4.4rem);
+            font-weight: 700; letter-spacing: -0.03em;
+            line-height: 1.1; margin-bottom: 1.25rem;
+        }
+        .hero h1 .accent { color: var(--blue-light); }
+        .hero .subtitle {
+            font-size: clamp(0.95rem, 2vw, 1.15rem);
+            color: var(--slate-light); max-width: 580px;
+            margin-bottom: 2.75rem; line-height: 1.75;
+        }
+
+        .pipeline {
+            display: flex; align-items: center; gap: 0.5rem;
+            flex-wrap: wrap; justify-content: center;
+            margin-bottom: 3.5rem;
+        }
+        .pipeline .step {
+            background: var(--navy-light);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px; padding: 0.55rem 1rem;
+            font-size: 0.82rem; font-weight: 500; white-space: nowrap;
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .step-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 18px; height: 18px;
+            background: var(--blue); border-radius: 50%;
+            font-size: 0.62rem; font-weight: 700; color: white; flex-shrink: 0;
+        }
+        .pipeline .arrow { color: var(--slate); font-size: 1rem; }
+
+        .stats-row {
+            display: flex; gap: 2.5rem; flex-wrap: wrap; justify-content: center;
+        }
+        .stat { text-align: center; }
+        .stat .num {
+            font-size: 2.1rem; font-weight: 700;
+            font-family: var(--mono); color: var(--white);
+        }
+        .stat .num.green { color: var(--green); }
+        .stat .num.blue  { color: var(--blue-light); }
+        .stat .label {
+            font-size: 0.76rem; color: var(--slate-light);
+            margin-top: 0.25rem; line-height: 1.4;
+        }
+
+        .scroll-hint {
+            margin-top: 3.5rem; color: var(--slate);
+            font-size: 0.78rem; display: flex;
+            flex-direction: column; align-items: center; gap: 0.5rem;
+        }
+        .arrow-down {
+            width: 18px; height: 18px;
+            border-right: 2px solid var(--slate);
+            border-bottom: 2px solid var(--slate);
+            transform: rotate(45deg);
+            animation: bounce 1.8s infinite;
+        }
+        @keyframes bounce {
+            0%,100% { transform: rotate(45deg) translateY(0); }
+            50% { transform: rotate(45deg) translateY(6px); }
+        }
+
+        /* ─── SECTIONS ─── */
+        section {
+            max-width: 1000px; margin: 0 auto; padding: 5rem 2rem;
+        }
+        section.wide { max-width: 1080px; }
+
+        .section-label {
+            font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.13em;
+            color: var(--blue); margin-bottom: 0.7rem;
+        }
+        .section-title {
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            font-weight: 700; letter-spacing: -0.02em;
+            margin-bottom: 0.8rem; line-height: 1.2;
+        }
+        .section-desc {
+            color: var(--slate-light); font-size: 0.95rem;
+            max-width: 660px; margin-bottom: 2.5rem; line-height: 1.75;
+        }
+
+        /* ─── DIVIDER ─── */
+        .divider {
+            max-width: 1000px; margin: 0 auto; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+        }
+
+        /* ─── CARDS ─── */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+        }
+        .card {
+            background: var(--navy-light);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px; padding: 1.75rem;
+            transition: border-color 0.2s;
+        }
+        .card:hover { border-color: rgba(255,255,255,0.12); }
+        .card .card-label {
+            font-size: 0.67rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--slate); margin-bottom: 0.7rem;
+        }
+        .card .card-value {
+            font-size: 1.8rem; font-weight: 700;
+            font-family: var(--mono); margin-bottom: 0.5rem;
+        }
+        .card .card-desc {
+            font-size: 0.84rem; color: var(--slate-light); line-height: 1.6;
+        }
+
+        /* ─── TABLE WRAPPER ─── */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 1.5rem;
+        }
+        table {
+            width: 100%; border-collapse: collapse;
+            font-size: 0.875rem; min-width: 460px;
+        }
+        thead th {
+            text-align: left; padding: 0.8rem 1.1rem;
+            font-weight: 600; font-size: 0.72rem;
+            text-transform: uppercase; letter-spacing: 0.07em;
+            color: var(--slate);
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            white-space: nowrap;
+        }
+        tbody td {
+            padding: 0.78rem 1.1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        .highlight-row { background: rgba(34,197,94,0.04); }
+        .highlight-row td { color: var(--green-soft); font-weight: 600; }
+        .mono { font-family: var(--mono); }
+
+        /* ─── CATEGORIZATION COMPARISON ─── */
+        .accuracy-compare {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem; margin: 2rem 0;
+        }
+        .acc-card {
+            background: var(--navy-light);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px; padding: 1.5rem;
+            position: relative; overflow: hidden;
+        }
+        .acc-card.best { border-color: rgba(59,130,246,0.3); }
+        .acc-card .acc-label {
+            font-size: 0.67rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--slate); margin-bottom: 0.4rem;
+        }
+        .acc-card .acc-title {
+            font-size: 0.9rem; font-weight: 600;
+            margin-bottom: 1rem; color: var(--off-white);
+        }
+        .acc-pct {
+            font-size: 2.6rem; font-weight: 700;
+            font-family: var(--mono);
+        }
+        .acc-bar-bg {
+            height: 4px; background: rgba(255,255,255,0.06);
+            border-radius: 3px; margin: 0.75rem 0 1rem; overflow: hidden;
+        }
+        .acc-bar { height: 100%; border-radius: 3px; }
+        .acc-note {
+            font-size: 0.78rem; color: var(--slate-light); line-height: 1.55;
+        }
+        .best-badge {
+            position: absolute; top: 1rem; right: 1rem;
+            background: rgba(59,130,246,0.15); color: var(--blue-light);
+            font-size: 0.6rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 0.2rem 0.5rem; border-radius: 4px;
+        }
+
+        /* ─── FEATURE BARS ─── */
+        .feature-bars { margin: 1.25rem 0; }
+        .feat-row {
+            display: flex; align-items: center; gap: 1rem; margin-bottom: 0.6rem;
+        }
+        .feat-name {
+            font-family: var(--mono); font-size: 0.72rem;
+            color: var(--slate-light); width: 220px;
+            flex-shrink: 0; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
+        }
+        .feat-bar-bg {
+            flex: 1; height: 5px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 3px; overflow: hidden;
+        }
+        .feat-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--blue), var(--blue-light));
+            border-radius: 3px;
+        }
+        .feat-val {
+            font-family: var(--mono); font-size: 0.72rem;
+            color: var(--slate-light); width: 42px; text-align: right; flex-shrink: 0;
+        }
+
+        /* ─── CROSS TAB ─── */
+        .crosstab-wrap { overflow-x: auto; margin: 2rem 0; }
+        .crosstab {
+            display: grid;
+            grid-template-columns: 155px 1fr 1fr;
+            gap: 3px; min-width: 440px;
+        }
+        .crosstab .corner { background: transparent; }
+        .crosstab .header {
+            background: var(--navy-light); padding: 0.85rem 1rem;
+            text-align: center; font-weight: 600; font-size: 0.82rem;
+            border-radius: 8px 8px 0 0;
+        }
+        .crosstab .row-header {
+            background: var(--navy-light); padding: 1rem;
+            font-weight: 600; font-size: 0.82rem;
+            display: flex; align-items: center;
+            border-radius: 8px 0 0 8px;
+        }
+        .crosstab .cell {
+            padding: 1.25rem; text-align: center; border-radius: 4px;
+        }
+        .cell .rate {
+            font-size: 1.55rem; font-weight: 700; font-family: var(--mono);
+        }
+        .cell .count {
+            font-size: 0.7rem; color: var(--slate-light); margin-top: 0.2rem;
+        }
+        .cell .tag {
+            display: inline-block; font-size: 0.6rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 0.2rem 0.55rem; border-radius: 4px; margin-top: 0.5rem;
+        }
+        .cell-safe   { background: rgba(34,197,94,0.10); }
+        .cell-safe .rate   { color: var(--green); }
+        .cell-danger { background: rgba(239,68,68,0.12); }
+        .cell-danger .rate { color: var(--red); }
+        .cell-missed { background: rgba(59,130,246,0.10); }
+        .cell-missed .rate { color: var(--blue-light); }
+        .cell-mixed  { background: rgba(245,158,11,0.10); }
+        .cell-mixed .rate  { color: var(--amber); }
+        .tag-risk { background: rgba(239,68,68,0.2); color: var(--red); }
+        .tag-opp  { background: rgba(59,130,246,0.2); color: var(--blue-light); }
+
+        /* ─── RISK BUCKETS ─── */
+        .buckets-wrap { margin: 2rem 0; }
+        .buckets {
+            display: flex; gap: 5px;
+            height: 200px; align-items: flex-end;
+        }
+        .bucket {
+            flex: 1; border-radius: 8px 8px 0 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start;
+            padding-top: 0.65rem;
+            transition: filter 0.2s; cursor: default;
+        }
+        .bucket:hover { filter: brightness(1.12); }
+        .bucket .pct {
+            font-family: var(--mono); font-weight: 700; font-size: 1rem;
+        }
+        .bucket .bcount {
+            font-size: 0.58rem; color: rgba(255,255,255,0.55); margin-top: 0.15rem;
+        }
+        /* Heights = default_rate / 56.0 (max) */
+        .b1 { background: linear-gradient(to top, #16a34a, #22c55e); height: 22%; }
+        .b2 { background: linear-gradient(to top, #65a30d, #84cc16); height: 64%; }
+        .b3 { background: linear-gradient(to top, #ca8a04, #eab308); height: 68%; }
+        .b4 { background: linear-gradient(to top, #ea580c, #f97316); height: 98%; }
+        .b5 { background: linear-gradient(to top, #dc2626, #ef4444); height: 100%; }
+
+        .bucket-labels {
+            display: flex; gap: 5px; margin-top: 0.5rem;
+        }
+        .bucket-labels div {
+            flex: 1; text-align: center;
+            font-size: 0.6rem; color: var(--slate-light);
+            text-transform: uppercase; letter-spacing: 0.04em;
+            line-height: 1.4;
+        }
+
+        /* ─── NOTE / INFO BOX ─── */
+        .note {
+            background: rgba(59,130,246,0.06);
+            border: 1px solid rgba(59,130,246,0.15);
+            border-left: 3px solid var(--blue);
+            border-radius: 0 6px 6px 0;
+            padding: 1rem 1.25rem;
+            font-size: 0.85rem; color: var(--slate-light);
+            line-height: 1.65; margin: 1.5rem 0;
+        }
+        .note strong { color: var(--off-white); }
+
+        /* ─── CHART IMAGES ─── */
+        .chart-img {
+            width: 100%; border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            margin-top: 0.5rem; display: block;
+        }
+        .chart-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;
+            margin: 1.5rem 0;
+        }
+        .chart-label {
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: var(--slate); margin-bottom: 0.4rem;
+        }
+
+        /* ─── LOSS TABLE COLORS ─── */
+        .loss-peak  { color: var(--green-soft); font-weight: 700; }
+        .loss-high  { color: var(--green); font-weight: 600; }
+        .loss-mid   { color: var(--amber); }
+        .loss-low   { color: var(--slate-light); }
+
+        /* ─── CODE BLOCK ─── */
+        .code-block {
+            background: var(--navy-light);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px; padding: 1.5rem;
+            font-family: var(--mono); font-size: 0.78rem;
+            line-height: 1.85; overflow-x: auto; margin: 1.5rem 0;
+        }
+        .code-block .comment { color: var(--slate); }
+        .code-block .cmd { color: var(--green-soft); }
+
+        /* ─── ARCHETYPE TABLE COLORS ─── */
+        td.dr-low  { color: var(--green-soft); }
+        td.dr-mid  { color: var(--amber); }
+        td.dr-high { color: var(--red); }
+
+        /* ─── FOOTER ─── */
+        footer {
+            max-width: 1000px; margin: 0 auto;
+            padding: 3rem 2rem 4rem;
+            text-align: center; color: var(--slate); font-size: 0.85rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        footer a { color: var(--blue-light); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .tech-stack {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 0.6rem; margin-top: 1.25rem;
+        }
+        .tech-tag {
+            background: var(--navy-light);
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 0.28rem 0.75rem; border-radius: 100px;
+            font-size: 0.73rem; color: var(--slate-light);
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hamburger { display: flex; }
+            .accuracy-compare { grid-template-columns: 1fr; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .feat-name { width: 160px; }
+        }
+        @media (max-width: 640px) {
+            .hero { padding: 6rem 1.5rem 4rem; }
+            .stats-row { gap: 1.25rem; }
+            .stat .num { font-size: 1.65rem; }
+            .crosstab { grid-template-columns: 105px 1fr 1fr; }
+            .cell .rate { font-size: 1.2rem; }
+            section { padding: 3rem 1.25rem; }
+            .buckets { height: 150px; }
+        }
+
+        /* ─── FADE-IN ANIMATION ─── */
+        .fade-in {
+            opacity: 0; transform: translateY(22px);
+            transition: opacity 0.65s ease, transform 0.65s ease;
+        }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav>
+    <div class="logo">Flow<span>Score</span></div>
+    <div class="nav-links">
+        <a href="#problem">Problem</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#categorization">Categorization</a>
+        <a href="#walkthrough">Walkthrough</a>
+        <a href="#results">Results</a>
+        <a href="#value">Business Value</a>
+        <a href="https://github.com/jessicabat/flowscore" target="_blank" class="gh-btn">GitHub ↗</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+    </button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+    <a href="#problem"       onclick="closeMobile()">Problem</a>
+    <a href="#pipeline"      onclick="closeMobile()">Pipeline</a>
+    <a href="#categorization" onclick="closeMobile()">Categorization</a>
+    <a href="#walkthrough" onclick="closeMobile()">Walkthrough</a>
+    <a href="#results"       onclick="closeMobile()">Results</a>
+    <a href="#value"         onclick="closeMobile()">Business Value</a>
+    <a href="https://github.com/jessicabat/flowscore" target="_blank">GitHub ↗</a>
+</div>
+
+<!-- ─── HERO ─── -->
+<div class="hero">
+    <div class="badge">
+        <div class="dot"></div>
+        End-to-End Cash Flow Underwriting Pipeline
+    </div>
+    <h1>Credit scoring from<br><span class="accent">cash flow data</span></h1>
+    <p class="subtitle">
+        A full ML pipeline that predicts credit default risk from bank transaction data alone,
+        with no credit bureau history required. Built on the principles of modern
+        cash flow underwriting: categorization → behavioral features → predictive scoring.
+    </p>
+    <div class="pipeline">
+        <div class="step"><span class="step-num">1</span>Raw Transactions</div>
+        <span class="arrow">→</span>
+        <div class="step"><span class="step-num">2</span>LLM Categorization</div>
+        <span class="arrow">→</span>
+        <div class="step"><span class="step-num">3</span>45 Behavioral Features</div>
+        <span class="arrow">→</span>
+        <div class="step"><span class="step-num">4</span>FlowScore (300–850)</div>
+    </div>
+    <div class="stats-row">
+        <div class="stat">
+            <div class="num blue">0.761</div>
+            <div class="label">AUC-ROC<br>Cash Flow Model</div>
+        </div>
+        <div class="stat">
+            <div class="num green">+10.8%</div>
+            <div class="label">AUC Lift over<br>Traditional Score</div>
+        </div>
+        <div class="stat">
+            <div class="num">21.3%</div>
+            <div class="label">Loss Reduction<br>@ 60% Approval Rate</div>
+        </div>
+        <div class="stat">
+            <div class="num">61.3%</div>
+            <div class="label">of Rejected Borrowers<br>Would Repay</div>
+        </div>
+    </div>
+    <div class="scroll-hint">
+        <span>Scroll to explore</span>
+        <div class="arrow-down"></div>
+    </div>
+</div>
+
+<!-- ─── PROBLEM ─── -->
+<section id="problem" class="fade-in">
+    <div class="section-label">The Problem</div>
+    <div class="section-title">76 million Americans are invisible to traditional credit</div>
+    <div class="section-desc">
+        Traditional credit scores depend entirely on bureau history. If you've never had a credit card,
+        loan, or line of credit, you simply don't exist to lenders. But your bank account tells a
+        different story: steady deposits, consistent rent, disciplined spending.
+        Cash flow underwriting reads that story.
+    </div>
+    <div class="card-grid">
+        <div class="card">
+            <div class="card-label">Missed Opportunity</div>
+            <div class="card-value" style="color: var(--blue-light);">61.3%</div>
+            <div class="card-desc">
+                of borrowers rejected by traditional scores would actually repay their loans.
+                That's 285 out of 465 rejected consumers, creditworthy borrowers the market never sees.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-label">Avoidable Risk</div>
+            <div class="card-value" style="color: var(--red);">16.9%</div>
+            <div class="card-desc">
+                of borrowers approved by traditional scores actually default.
+                Their credit history looked fine. Their cash flow said otherwise.
+                That's 133 of 785 approved consumers.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-label">FlowScore</div>
+            <div class="card-value" style="color: var(--green);">300–850</div>
+            <div class="card-desc">
+                A calibrated cash flow credit score derived purely from transaction behavior.
+                Higher score = lower default probability. Same intuition as FICO,
+                built from behavior not history.
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─── PIPELINE ─── -->
+<section id="pipeline" class="fade-in">
+    <div class="section-label">The Pipeline</div>
+    <div class="section-title">From raw transactions to a credit decision</div>
+    <div class="section-desc">
+        FlowScore implements the full cash flow underwriting stack used in modern open banking credit:
+        transaction categorization, behavioral feature extraction, and risk scoring. Each stage is independently runnable.
+    </div>
+
+    <div class="card-grid" style="margin-bottom: 2.5rem;">
+        <div class="card">
+            <div class="card-label">Stage 1: Categorization</div>
+            <div class="card-value" style="font-size: 1.15rem;">Rules + Claude Sonnet</div>
+            <div class="card-desc">
+                A keyword/regex rule engine handles ~83% of transactions. Claude Sonnet API
+                classifies ambiguous merchant strings (e.g., "SQ *SBUX #2394 SAN DIEGO CA").
+                95.7% accuracy on noisy data across 25 transaction categories.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-label">Stage 2: Feature Engineering</div>
+            <div class="card-value" style="font-size: 1.15rem;">45 Behavioral Features</div>
+            <div class="card-desc">
+                Income stability, savings rate, obligation-to-income ratio, overdraft frequency,
+                loan stacking, gambling activity, BNPL usage — the behavioral signals
+                that open banking underwriting is built on.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-label">Stage 3: Credit Risk Model</div>
+            <div class="card-value" style="font-size: 1.15rem;">LogReg + XGBoost</div>
+            <div class="card-desc">
+                Binary default prediction trained on 3,750 consumers, evaluated on 1,250.
+                SHAP explainability for each feature. Score calibrated to 300–850 range.
+                Four model variants compared against a traditional score baseline.
+            </div>
+        </div>
+    </div>
+
+    <div class="section-label" style="margin-top: 3rem;">Top Predictive Features by SHAP Value</div>
+    <p style="color: var(--slate-light); font-size: 0.87rem; margin-bottom: 1.25rem;">
+        Mean absolute SHAP value across 1,250 held-out consumers (XGBoost model).
+        Bars are proportional to predictive impact on default probability.
+    </p>
+    <div class="feature-bars">
+        <!-- Bars normalized: max SHAP = 0.3613 = 100% -->
+        <div class="feat-row">
+            <div class="feat-name">obligation_to_income_ratio</div>
+            <div class="feat-bar-bg"><div class="feat-bar" style="width:100%"></div></div>
+            <div class="feat-val">0.361</div>
+        </div>
+        <div class="feat-row">
+            <div class="feat-name">estimated_balance_trend</div>
+            <div class="feat-bar-bg"><div class="feat-bar" style="width:78%"></div></div>
+            <div class="feat-val">0.283</div>
+        </div>
+        <div class="feat-row">
+            <div class="feat-name">income_regularity</div>
+            <div class="feat-bar-bg"><div class="feat-bar" style="width:64%"></div></div>
+            <div class="feat-val">0.233</div>
+        </div>
+        <div class="feat-row">
+            <div class="feat-name">income_to_expense_ratio</div>
+            <div class="feat-bar-bg"><div class="feat-bar" style="width:50%"></div></div>
+            <div class="feat-val">0.181</div>
+        </div>
+        <div class="feat-row">
+            <div class="feat-name">min_monthly_cashflow</div>
+            <div class="feat-bar-bg"><div class="feat-bar" style="width:42%"></div></div>
+            <div class="feat-val">0.151</div>
+        </div>
+        <div class="feat-row">
+            <div class="feat-name">subscription_total_monthly</div>
+            <div class="feat-bar-bg"><div class="feat-bar" style="width:41%"></div></div>
+            <div class="feat-val">0.148</div>
+        </div>
+        <div class="feat-row">
+            <div class="feat-name">overdraft_frequency</div>
+            <div class="feat-bar-bg"><div class="feat-bar" style="width:40%"></div></div>
+            <div class="feat-val">0.145</div>
+        </div>
+        <div class="feat-row">
+            <div class="feat-name">net_monthly_cashflow_std</div>
+            <div class="feat-bar-bg"><div class="feat-bar" style="width:39%"></div></div>
+            <div class="feat-val">0.140</div>
+        </div>
+        <div class="feat-row">
+            <div class="feat-name">spending_trend_slope</div>
+            <div class="feat-bar-bg"><div class="feat-bar" style="width:36%"></div></div>
+            <div class="feat-val">0.131</div>
+        </div>
+        <div class="feat-row">
+            <div class="feat-name">essential_ratio</div>
+            <div class="feat-bar-bg"><div class="feat-bar" style="width:33%"></div></div>
+            <div class="feat-val">0.119</div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─── CATEGORIZATION ─── -->
+<section id="categorization" class="fade-in">
+    <div class="section-label">Categorization Accuracy</div>
+    <div class="section-title">Why rules alone aren't enough</div>
+    <div class="section-desc">
+        Real bank statements are messy. "CHIPOTLE" becomes "CHIPTL *ONL #839 SAN DIEGO CA 04/12".
+        The same test set of 6,209 transactions was run under three conditions to isolate
+        the value of noise-tolerance and LLM augmentation.
+    </div>
+
+    <div class="accuracy-compare">
+        <div class="acc-card">
+            <div class="acc-label">Condition A</div>
+            <div class="acc-title">Clean names · Rules only</div>
+            <div class="acc-pct" style="color: var(--green);">99.2%</div>
+            <div class="acc-bar-bg">
+                <div class="acc-bar" style="width:99.2%; background: var(--green);"></div>
+            </div>
+            <div class="acc-note">
+                Perfect-world baseline. Rules cover 100% of transactions.
+                Only failure: <span style="font-family:var(--mono); font-size:0.74rem;">groceries → shopping</span>
+                (47 transactions on the boundary).
+            </div>
+        </div>
+        <div class="acc-card">
+            <div class="acc-label">Condition B</div>
+            <div class="acc-title">Noisy names · Rules only</div>
+            <div class="acc-pct" style="color: var(--red);">82.3%</div>
+            <div class="acc-bar-bg">
+                <div class="acc-bar" style="width:82.3%; background: var(--red);"></div>
+            </div>
+            <div class="acc-note">
+                Realistic baseline. 1,040 transactions (16.8%) fall through to "other"
+                when rules can't match noisy merchant strings. 17-point accuracy drop.
+            </div>
+        </div>
+        <div class="acc-card best">
+            <div class="best-badge">★ Production Approach</div>
+            <div class="acc-label">Condition C</div>
+            <div class="acc-title">Noisy names · Rules + Claude</div>
+            <div class="acc-pct" style="color: var(--blue-light);">95.7%</div>
+            <div class="acc-bar-bg">
+                <div class="acc-bar" style="width:95.7%; background: var(--blue-light);"></div>
+            </div>
+            <div class="acc-note">
+                LLM handles 1,040 ambiguous transactions the rules couldn't classify.
+                Recovers 13+ accuracy points at a cost of
+                <strong style="color:var(--off-white);">$0.36 per 6,209 transactions</strong>.
+            </div>
+        </div>
+    </div>
+
+    <div class="note">
+        <strong>Design rationale:</strong> The rule engine is fast, free, and handles ~83% of
+        real-world transactions correctly. Claude Sonnet is invoked only for the ~17% that rules
+        can't confidently classify, keeping API cost minimal while recovering most of the accuracy gap.
+        This is how production transaction categorization engines are built: rules for coverage,
+        LLMs for ambiguity resolution.
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─── RESULTS ─── -->
+<section id="results" class="fade-in">
+    <div class="section-label">Model Results</div>
+    <div class="section-title">Cash flow beats traditional scoring</div>
+    <div class="section-desc">
+        Evaluated on 1,250 held-out consumers (25.0% default rate, stratified split).
+        The best cash flow model outperforms the traditional score baseline across all metrics.
+        Combining both confirms orthogonality: each source captures signal the other misses.
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>AUC-ROC ↑</th>
+                    <th>KS Statistic ↑</th>
+                    <th>Gini ↑</th>
+                    <th>AUC Lift</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Traditional score only (baseline)</td>
+                    <td class="mono">0.687</td>
+                    <td class="mono">0.342</td>
+                    <td class="mono">0.374</td>
+                    <td class="mono" style="color:var(--slate);">baseline</td>
+                </tr>
+                <tr class="highlight-row">
+                    <td>Logistic Regression (cash flow features)</td>
+                    <td class="mono">0.761</td>
+                    <td class="mono">0.452</td>
+                    <td class="mono">0.523</td>
+                    <td class="mono">+10.8%</td>
+                </tr>
+                <tr>
+                    <td>XGBoost (cash flow features)</td>
+                    <td class="mono">0.732</td>
+                    <td class="mono">0.412</td>
+                    <td class="mono">0.463</td>
+                    <td class="mono" style="color:var(--green-soft);">+6.5%</td>
+                </tr>
+                <tr>
+                    <td>Combined (cash flow + traditional score)</td>
+                    <td class="mono">0.736</td>
+                    <td class="mono">0.411</td>
+                    <td class="mono">0.472</td>
+                    <td class="mono" style="color:var(--green-soft);">+7.1%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="note">
+        <strong>Why Logistic Regression outperforms XGBoost here:</strong>
+        The 45 features are already well-engineered linear signals (ratios, slopes, and counts
+        computed from raw transactions), so there's limited room for XGBoost to find patterns
+        that LR misses. LR also benefits from L2 regularization and standardized inputs,
+        which suit this feature space well.
+    </div>
+
+    <div class="chart-grid" style="margin-top: 2.5rem;">
+        <div>
+            <div class="chart-label">ROC Curves: All Four Models</div>
+            <img src="data/model_results/roc_curves.png"
+                 alt="ROC curves comparing all four models" class="chart-img">
+        </div>
+        <div>
+            <div class="chart-label">FlowScore Risk Bucket Default Rates</div>
+            <img src="data/model_results/risk_buckets.png"
+                 alt="Default rate by FlowScore risk bucket" class="chart-img">
+        </div>
+    </div>
+
+    <div class="section-label" style="margin-top: 3rem;">FlowScore Risk Buckets</div>
+    <p style="color: var(--slate-light); font-size: 0.87rem; margin-bottom: 0.75rem;">
+        Observed default rate by score segment. Bar height is proportional to default rate (56% max).
+        Clear monotonic separation from the lowest to highest risk tier.
+    </p>
+    <div class="buckets-wrap">
+        <div class="buckets">
+            <div class="bucket b1"><div class="pct">12.6%</div><div class="bcount">n=744</div></div>
+            <div class="bucket b2"><div class="pct">35.8%</div><div class="bcount">n=176</div></div>
+            <div class="bucket b3"><div class="pct">38.2%</div><div class="bcount">n=157</div></div>
+            <div class="bucket b4"><div class="pct">55.1%</div><div class="bcount">n=98</div></div>
+            <div class="bucket b5"><div class="pct">56.0%</div><div class="bcount">n=75</div></div>
+        </div>
+        <div class="bucket-labels">
+            <div>Very Low<br>750+</div>
+            <div>Low<br>650–749</div>
+            <div>Medium<br>550–649</div>
+            <div>High<br>450–549</div>
+            <div>Very High<br>&lt;450</div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─── BUSINESS VALUE ─── -->
+<section id="value" class="fade-in wide">
+    <div class="section-label">Business Value</div>
+    <div class="section-title">The orthogonality matrix</div>
+    <div class="section-desc">
+        Traditional and cash flow scores capture fundamentally different information about default risk.
+        Each cell shows the observed default rate for that segment, revealing both the missed
+        opportunities and avoidable risks hidden in traditional underwriting.
+    </div>
+
+    <div class="crosstab-wrap">
+        <div class="crosstab">
+            <div class="corner"></div>
+            <div class="header">
+                FlowScore ≥ 650<br>
+                <span style="font-size:0.68rem; color:var(--slate-light);">Low Risk</span>
+            </div>
+            <div class="header">
+                FlowScore &lt; 650<br>
+                <span style="font-size:0.68rem; color:var(--slate-light);">High Risk</span>
+            </div>
+
+            <div class="row-header">
+                Trad ≥ 660<br>
+                <span style="font-size:0.72rem; color:var(--slate-light);">Approved</span>
+            </div>
+            <div class="cell cell-safe">
+                <div class="rate">11.6%</div>
+                <div class="count">n = 605</div>
+            </div>
+            <div class="cell cell-danger">
+                <div class="rate">45.2%</div>
+                <div class="count">n = 42</div>
+                <div class="tag tag-risk">Avoidable Risk</div>
+            </div>
+
+            <div class="row-header">
+                Trad &lt; 660<br>
+                <span style="font-size:0.72rem; color:var(--slate-light);">Rejected</span>
+            </div>
+            <div class="cell cell-missed">
+                <div class="rate">27.6%</div>
+                <div class="count">n = 315</div>
+                <div class="tag tag-opp">Missed Opportunity</div>
+            </div>
+            <div class="cell cell-mixed">
+                <div class="rate">47.6%</div>
+                <div class="count">n = 288</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="note" style="margin-top: 1rem;">
+        <strong>Reading the matrix:</strong> Trad High + Flow Low (45.2% default) exposes borrowers
+        who look creditworthy to bureaus but show financial distress in their cash flow.
+        Trad Low + Flow High (27.6% default) are the "missed opportunity" segment,
+        excluded by traditional scoring but meaningfully less risky than the 47.6% base rate
+        for all traditionally-rejected borrowers.
+    </div>
+
+    <div class="chart-grid" style="margin-top: 2rem;">
+        <div>
+            <div class="chart-label">Approval Rate vs. Loss Rate</div>
+            <img src="data/model_results/approval_lift.png"
+                 alt="Approval lift curve vs traditional scoring" class="chart-img">
+        </div>
+        <div>
+            <div class="chart-label">Orthogonality Heatmap</div>
+            <img src="data/model_results/cross_tab.png"
+                 alt="Traditional vs FlowScore cross-tab heatmap" class="chart-img">
+        </div>
+    </div>
+
+    <div class="section-label" style="margin-top: 2.5rem;">Loss Reduction at Fixed Approval Rates</div>
+    <p style="color: var(--slate-light); font-size: 0.87rem; margin-bottom: 1rem;">
+        At equal approval volume, cash flow scoring consistently reduces default losses.
+        Peak reduction occurs at the 60% approval rate, which is operationally relevant for most lenders.
+    </p>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Approval Rate</th>
+                    <th>Traditional Loss</th>
+                    <th>FlowScore Loss</th>
+                    <th>Loss Reduction</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="mono">50%</td>
+                    <td class="mono">13.0%</td>
+                    <td class="mono">11.0%</td>
+                    <td class="mono loss-high">−14.8%</td>
+                </tr>
+                <tr class="highlight-row">
+                    <td class="mono">60%</td>
+                    <td class="mono">16.3%</td>
+                    <td class="mono">12.8%</td>
+                    <td class="mono loss-peak">−21.3% ← peak</td>
+                </tr>
+                <tr>
+                    <td class="mono">70%</td>
+                    <td class="mono">19.5%</td>
+                    <td class="mono">15.8%</td>
+                    <td class="mono loss-high">−19.3%</td>
+                </tr>
+                <tr>
+                    <td class="mono">80%</td>
+                    <td class="mono">21.7%</td>
+                    <td class="mono">18.9%</td>
+                    <td class="mono loss-mid">−12.9%</td>
+                </tr>
+                <tr>
+                    <td class="mono">90%</td>
+                    <td class="mono">23.6%</td>
+                    <td class="mono">21.6%</td>
+                    <td class="mono loss-low">−8.3%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-grid" style="margin-top: 1.5rem;">
+        <div class="card">
+            <div class="card-label">Rescued Borrowers</div>
+            <div class="card-value" style="color: var(--blue-light);">218</div>
+            <div class="card-desc">
+                Traditionally rejected borrowers the cash flow model approves
+                (default probability &lt;30%). Of those, <strong>160 would repay</strong>,
+                a 73.4% repayment rate within the rescued group.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-label">Risk Flag Precision</div>
+            <div class="card-value" style="color: var(--amber);">42.0%</div>
+            <div class="card-desc">
+                Precision of the cash flow risk flag on traditionally approved borrowers
+                (default prob &gt;50%). 21 true defaults caught out of 50 flagged,
+                useful for routing to a human underwriting review queue.
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─── WALKTHROUGH ─── -->
+<section id="walkthrough" class="fade-in">
+    <div class="section-label">Pipeline Walkthrough</div>
+    <div class="section-title">Two consumers, two different stories</div>
+    <div class="section-desc">
+        The same pipeline, applied to real examples from the dataset. Same data source, opposite outcomes. This is what cash flow scoring sees that traditional scores cannot.
+    </div>
+
+    <!-- Consumer outcome cards -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2rem;">
+        <div class="card" style="border-left:3px solid var(--blue);">
+            <div class="card-label">Consumer A — Missed Opportunity</div>
+            <div style="font-size:0.78rem; color:var(--slate-light); margin-bottom:1rem;">Thin-file newcomer &nbsp;·&nbsp; $2,648/mo &nbsp;·&nbsp; 4 months of history</div>
+            <div style="display:flex; gap:1.5rem; align-items:center;">
+                <div>
+                    <div style="font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--slate); margin-bottom:0.2rem;">Trad Score</div>
+                    <div class="mono" style="font-size:1.4rem; font-weight:700; color:var(--red);">494</div>
+                    <div style="font-size:0.68rem; color:var(--red);">REJECTED</div>
+                </div>
+                <div style="color:var(--slate); font-size:1rem;">→</div>
+                <div>
+                    <div style="font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--slate); margin-bottom:0.2rem;">FlowScore</div>
+                    <div class="mono" style="font-size:1.4rem; font-weight:700; color:var(--green);">846</div>
+                    <div style="font-size:0.68rem; color:var(--green);">APPROVED ✓</div>
+                </div>
+            </div>
+            <div style="margin-top:1rem; font-size:0.78rem; color:var(--slate-light);">Did not default. A good customer lost by traditional scoring.</div>
+        </div>
+        <div class="card" style="border-left:3px solid var(--red);">
+            <div class="card-label">Consumer B — Avoidable Risk</div>
+            <div style="font-size:0.78rem; color:var(--slate-light); margin-bottom:1rem;">Overextended &nbsp;·&nbsp; $4,761/mo &nbsp;·&nbsp; 11 months of history</div>
+            <div style="display:flex; gap:1.5rem; align-items:center;">
+                <div>
+                    <div style="font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--slate); margin-bottom:0.2rem;">Trad Score</div>
+                    <div class="mono" style="font-size:1.4rem; font-weight:700; color:var(--green-soft);">662</div>
+                    <div style="font-size:0.68rem; color:var(--green-soft);">APPROVED</div>
+                </div>
+                <div style="color:var(--slate); font-size:1rem;">→</div>
+                <div>
+                    <div style="font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--slate); margin-bottom:0.2rem;">FlowScore</div>
+                    <div class="mono" style="font-size:1.4rem; font-weight:700; color:var(--red);">407</div>
+                    <div style="font-size:0.68rem; color:var(--red);">FLAGGED ⚠</div>
+                </div>
+            </div>
+            <div style="margin-top:1rem; font-size:0.78rem; color:var(--slate-light);">Defaulted. A loss that cash flow scoring would have caught.</div>
+        </div>
+    </div>
+
+    <!-- Categorization example -->
+    <div class="section-label">What categorization sees</div>
+    <div class="code-block" style="font-size:0.76rem; margin-bottom:2rem;">
+        <span class="comment"># Clean merchant string — rule matches instantly, no API cost</span><br>
+        TACO BELL &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; → <span style="color:var(--blue-light);">dining</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✓ rule match<br>
+        STARK INDUSTRIES PAY &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; → <span style="color:var(--blue-light);">payroll</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✓ rule match<br><br>
+        <span class="comment"># Noisy merchant string — rules fail, sent to Claude Sonnet</span><br>
+        DOORDASH ORDER &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; → <span style="color:var(--slate);">"ONLINE PMT DOORDASH O"</span> &nbsp;(truncated + prefix added)<br>
+        &nbsp;&nbsp;&nbsp;rule: <span style="color:var(--red);">no match</span> &nbsp;→ Claude Sonnet → <span style="color:var(--green);">food_delivery</span> ✓
+    </div>
+
+    <!-- Feature comparison -->
+    <div class="section-label">What the features show</div>
+    <div class="table-wrap" style="margin-bottom:2rem;">
+        <table>
+            <thead>
+                <tr><th>Feature</th><th>Consumer A</th><th>Consumer B</th><th>What it tells us</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="mono">obligation_to_income_ratio</td>
+                    <td class="mono">0.29</td>
+                    <td class="mono" style="color:var(--red);">0.51</td>
+                    <td>B's fixed obligations eat half of income</td>
+                </tr>
+                <tr>
+                    <td class="mono">months_negative_cashflow</td>
+                    <td class="mono">3 of 4</td>
+                    <td class="mono" style="color:var(--red);">9 of 11</td>
+                    <td>B runs a deficit almost every month</td>
+                </tr>
+                <tr>
+                    <td class="mono">loan_stacking_flag</td>
+                    <td class="mono" style="color:var(--green);">0</td>
+                    <td class="mono" style="color:var(--red);">1</td>
+                    <td>B is borrowing from 3+ concurrent lenders</td>
+                </tr>
+                <tr>
+                    <td class="mono">overdraft_frequency</td>
+                    <td class="mono" style="color:var(--green);">0.00</td>
+                    <td class="mono" style="color:var(--red);">0.18/mo</td>
+                    <td>B overdrafts roughly every other month</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Score output -->
+    <div class="section-label">Score output</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
+        <div class="card" style="text-align:center; padding:1.5rem;">
+            <div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--slate); margin-bottom:0.75rem;">Consumer A</div>
+            <div style="font-size:0.75rem; color:var(--slate-light);">Default probability</div>
+            <div class="mono" style="font-size:1.6rem; font-weight:700; color:var(--green); margin:0.15rem 0;">0.7%</div>
+            <div style="height:1px; background:rgba(255,255,255,0.06); margin:0.75rem 0;"></div>
+            <div style="font-size:0.75rem; color:var(--slate-light);">FlowScore</div>
+            <div class="mono" style="font-size:2.2rem; font-weight:700; color:var(--green); margin:0.15rem 0;">846</div>
+            <div style="font-size:0.72rem; color:var(--green);">Very Low Risk · Approve</div>
+        </div>
+        <div class="card" style="text-align:center; padding:1.5rem;">
+            <div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--slate); margin-bottom:0.75rem;">Consumer B</div>
+            <div style="font-size:0.75rem; color:var(--slate-light);">Default probability</div>
+            <div class="mono" style="font-size:1.6rem; font-weight:700; color:var(--red); margin:0.15rem 0;">80.5%</div>
+            <div style="height:1px; background:rgba(255,255,255,0.06); margin:0.75rem 0;"></div>
+            <div style="font-size:0.75rem; color:var(--slate-light);">FlowScore</div>
+            <div class="mono" style="font-size:2.2rem; font-weight:700; color:var(--red); margin:0.15rem 0;">407</div>
+            <div style="font-size:0.72rem; color:var(--red);">Very High Risk · Flag for Review</div>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─── METHODOLOGY ─── -->
+<section class="fade-in">
+    <div class="section-label">Methodology</div>
+    <div class="section-title">Honest about the data</div>
+    <div class="section-desc">
+        This project uses synthetic transaction data: 5,000 consumers across 6 behavioral archetypes,
+        3.3M transactions, 25.1% overall default rate. Default labels are generated from
+        transaction-derived signals, not actual credit outcomes. The goal is demonstrating pipeline
+        integrity and methodology, not publishing production metrics.
+    </div>
+
+    <div class="code-block">
+        <span class="comment"># 1. Generate 5,000 synthetic consumer profiles (6 archetypes, seed=42)</span><br>
+        <span class="cmd">python data/generate_synthetic_data.py --n_consumers 5000 --seed 42</span><br><br>
+        <span class="comment"># 2. Hybrid categorization: rules + Claude Sonnet on noisy merchant strings</span><br>
+        <span class="cmd">python src/categorizer.py --input data/flowscore_dataset.json \<br>
+&nbsp;&nbsp;--output data/results_noisy_hybrid.json --noise medium --n_consumers 10</span><br><br>
+        <span class="comment"># 3. Extract 45 behavioral features for all 5,000 consumers</span><br>
+        <span class="cmd">python src/feature_engine.py --input data/flowscore_dataset.json \<br>
+&nbsp;&nbsp;--output data/features.csv</span><br><br>
+        <span class="comment"># 4. Train models + generate all business value plots</span><br>
+        <span class="cmd">python src/model.py --features data/features.csv --output data/model_results/</span>
+    </div>
+
+    <div class="section-label" style="margin-top: 3rem;">FlowScore → Prism Data Product Mapping</div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>FlowScore Module</th><th>Prism Data Product</th><th>Function</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Transaction Categorizer</td>
+                    <td class="mono" style="color:var(--blue-light);">Categories v4</td>
+                    <td>Classify raw merchant strings into 25 spending categories</td>
+                </tr>
+                <tr>
+                    <td>Feature Engine</td>
+                    <td class="mono" style="color:var(--blue-light);">Insights v4 + Income v4</td>
+                    <td>Extract 45 behavioral attributes from categorized transaction history</td>
+                </tr>
+                <tr>
+                    <td>Credit Risk Model</td>
+                    <td class="mono" style="color:var(--blue-light);">CashScore® v4</td>
+                    <td>Predict default probability; calibrate to a 300–850 score</td>
+                </tr>
+                <tr>
+                    <td>Business Value Analysis</td>
+                    <td class="mono" style="color:var(--blue-light);">Client Reporting</td>
+                    <td>Approval lift curves, loss simulation, orthogonality matrix</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-label" style="margin-top: 3rem;">Dataset: Synthetic Consumer Archetypes</div>
+    <p style="color:var(--slate-light); font-size:0.87rem; margin-bottom:1rem;">
+        Each archetype has distinct income patterns, spending behaviors, and default probabilities.
+        The financially_stressed and overextended archetypes are where cash flow signals
+        most visibly diverge from traditional scores.
+    </p>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Archetype</th><th>N</th><th>Share</th><th>Default Rate</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>stable_salaried</td>
+                    <td class="mono">1,541</td><td class="mono">30.8%</td>
+                    <td class="mono dr-low">8.4%</td>
+                </tr>
+                <tr>
+                    <td>high_earner_high_spender</td>
+                    <td class="mono">765</td><td class="mono">15.3%</td>
+                    <td class="mono dr-low">10.8%</td>
+                </tr>
+                <tr>
+                    <td>thin_file_newcomer</td>
+                    <td class="mono">609</td><td class="mono">12.2%</td>
+                    <td class="mono dr-low">14.9%</td>
+                </tr>
+                <tr>
+                    <td>gig_worker</td>
+                    <td class="mono">743</td><td class="mono">14.9%</td>
+                    <td class="mono dr-mid">30.4%</td>
+                </tr>
+                <tr>
+                    <td>overextended</td>
+                    <td class="mono">631</td><td class="mono">12.6%</td>
+                    <td class="mono dr-high">46.9%</td>
+                </tr>
+                <tr>
+                    <td>financially_stressed</td>
+                    <td class="mono">711</td><td class="mono">14.2%</td>
+                    <td class="mono dr-high">60.2%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+    <p>
+        Built by <strong>Jessica</strong> · Data Science @ UC San Diego<br>
+        <a href="https://github.com/jessicabat/flowscore" target="_blank">View on GitHub ↗</a>
+    </p>
+    <div class="tech-stack">
+        <span class="tech-tag">Python</span>
+        <span class="tech-tag">scikit-learn</span>
+        <span class="tech-tag">XGBoost</span>
+        <span class="tech-tag">SHAP</span>
+        <span class="tech-tag">Claude Sonnet API</span>
+        <span class="tech-tag">Pandas / NumPy</span>
+        <span class="tech-tag">Matplotlib</span>
+    </div>
+</footer>
+
+<script>
+    // Fade-in on scroll
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // Mobile hamburger
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+    hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('open');
+        mobileMenu.classList.toggle('open');
+    });
+    function closeMobile() {
+        hamburger.classList.remove('open');
+        mobileMenu.classList.remove('open');
+    }
+    // Close mobile menu on outside click
+    document.addEventListener('click', (e) => {
+        if (!hamburger.contains(e.target) && !mobileMenu.contains(e.target)) {
+            closeMobile();
+        }
+    });
+</script>
+
+</body>
+</html>
