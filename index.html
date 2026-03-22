@@ -48,35 +48,123 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ─── NAV ─── */
-        nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            padding: 0.9rem 2rem;
-            background: rgba(15,23,42,0.92);
-            backdrop-filter: blur(14px);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            display: flex; align-items: center; justify-content: space-between;
+        /* ─── TUBELIGHT NAV ─── */
+        .tl-logo {
+            position: fixed; top: 1.05rem; left: 2rem; z-index: 101;
+            font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em;
+            color: var(--off-white); text-decoration: none;
         }
-        .logo { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.02em; }
-        .logo span { color: var(--blue); }
+        .logo-flow {
+            display: inline-block;
+            background: linear-gradient(105deg,
+                rgba(255,255,255,0.55) 0%,
+                rgba(255,255,255,0.55) 30%,
+                rgba(255,255,255,1.0)  48%,
+                rgba(255,255,255,1.0)  52%,
+                rgba(255,255,255,0.55) 70%,
+                rgba(255,255,255,0.55) 100%
+            );
+            background-size: 250% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: logo-shimmer 2.8s linear infinite;
+        }
+        @keyframes logo-shimmer {
+            0%   { background-position: 120% center; }
+            100% { background-position: -120% center; }
+        }
+        .logo-score {
+            color: white;
+            animation: logo-breathe 2.4s ease-in-out infinite;
+        }
+        @keyframes logo-breathe {
+            0%, 100% { text-shadow: 0 0 3px rgba(255,255,255,0.2); }
+            50%       { text-shadow: 0 0 10px rgba(255,255,255,0.85), 0 0 22px rgba(255,255,255,0.3); }
+        }
 
-        .nav-links { display: flex; gap: 1.5rem; align-items: center; }
-        .nav-links a {
-            color: var(--slate-light); text-decoration: none;
-            font-size: 0.84rem; font-weight: 500; transition: color 0.2s;
+        .tl-ext-links {
+            position: fixed; top: 0.7rem; right: 2rem; z-index: 101;
+            display: flex; gap: 0.5rem; align-items: center;
         }
-        .nav-links a:hover { color: var(--white); }
-        .nav-links .gh-btn {
+        .tl-ext-btn {
             border: 1px solid rgba(255,255,255,0.12);
             padding: 0.32rem 0.85rem; border-radius: 6px;
+            font-size: 0.82rem; font-weight: 500;
+            color: var(--slate-light); text-decoration: none;
             transition: border-color 0.2s, color 0.2s;
         }
-        .nav-links .gh-btn:hover { border-color: var(--blue); color: var(--blue-light); }
+        .tl-ext-btn:hover { border-color: var(--blue); color: var(--blue-light); }
+
+        .tubelight-nav {
+            position: fixed; top: 0.75rem; left: 50%; transform: translateX(-50%);
+            z-index: 100;
+            display: flex; align-items: center; gap: 0;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 4px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+            overflow: visible;
+            white-space: nowrap;
+        }
+
+        #tl-lamp {
+            position: absolute;
+            top: 4px;
+            height: calc(100% - 8px);
+            background: rgba(255,255,255,0.08);
+            border-radius: 9999px;
+            z-index: 0;
+            pointer-events: none;
+            will-change: left, width;
+        }
+        #tl-lamp.animated {
+            transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #tl-lamp::before {
+            content: '';
+            position: absolute;
+            top: -4px; left: 50%; transform: translateX(-50%);
+            width: 32px; height: 4px;
+            background: var(--blue-light);
+            border-radius: 9999px 9999px 0 0;
+            box-shadow:
+                0 -6px 20px 4px rgba(96,165,250,0.4),
+                0 -12px 40px 8px rgba(96,165,250,0.2),
+                0 -3px 8px 3px rgba(96,165,250,0.5);
+        }
+        #tl-lamp::after {
+            content: '';
+            position: absolute;
+            top: -18px; left: 50%; transform: translateX(-50%);
+            width: 56px; height: 18px;
+            background: rgba(96,165,250,0.12);
+            border-radius: 9999px;
+            filter: blur(10px);
+        }
+
+        .tl-item {
+            position: relative; z-index: 1;
+            color: rgba(148,163,184,0.85);
+            text-decoration: none;
+            font-size: 0.8rem; font-weight: 600;
+            padding: 0.42rem 0.9rem;
+            border-radius: 9999px;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+        .tl-item:hover { color: var(--white); }
+        .tl-item.active { color: var(--blue-light); }
 
         /* hamburger */
         .hamburger {
             display: none; flex-direction: column; gap: 5px;
             background: none; border: none; cursor: pointer; padding: 4px;
+            position: fixed; top: 1.05rem; right: 2rem; z-index: 101;
         }
         .hamburger span {
             display: block; width: 22px; height: 2px;
@@ -87,7 +175,7 @@
         .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
         .mobile-menu {
-            display: none; position: fixed; top: 57px; left: 0; right: 0;
+            display: none; position: fixed; top: 56px; left: 0; right: 0;
             background: rgba(15,23,42,0.98);
             border-bottom: 1px solid rgba(255,255,255,0.06);
             z-index: 99; padding: 1rem 2rem 1.5rem;
@@ -231,7 +319,8 @@
         .card-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1.25rem;
+            gap: 1.75rem;
+            align-items: stretch;
         }
         .card {
             background: var(--navy-light);
@@ -395,41 +484,153 @@
         .tag-risk { background: rgba(239,68,68,0.2); color: var(--red); }
         .tag-opp  { background: rgba(59,130,246,0.2); color: var(--blue-light); }
 
-        /* ─── RISK BUCKETS ─── */
-        .buckets-wrap { margin: 2rem 0; }
-        .buckets {
-            display: flex; gap: 5px;
-            height: 200px; align-items: flex-end;
+        /* ─── ANIMATED BAR CHART CARD ─── */
+        .abc-card {
+            position: relative; width: 100%;
+            overflow: hidden; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: #0a1020;
+            box-shadow: 0 4px 28px rgba(0,0,0,0.5);
+            margin: 2rem 0; cursor: default;
         }
-        .bucket {
-            flex: 1; border-radius: 8px 8px 0 0;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: flex-start;
-            padding-top: 0.65rem;
-            transition: filter 0.2s; cursor: default;
+        .abc-visual {
+            position: relative; height: 220px; overflow: hidden;
+            border-radius: 12px 12px 0 0;
         }
-        .bucket:hover { filter: brightness(1.12); }
-        .bucket .pct {
-            font-family: var(--mono); font-weight: 700; font-size: 1rem;
+        .abc-grid {
+            pointer-events: none; position: absolute; inset: 0; z-index: 4;
+            background:
+                linear-gradient(to right, rgba(128,128,128,0.07) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(128,128,128,0.07) 1px, transparent 1px);
+            background-size: 20px 20px;
+            -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 60%, transparent 100%);
+            mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 60%, transparent 100%);
         }
-        .bucket .bcount {
-            font-size: 0.58rem; color: rgba(255,255,255,0.55); margin-top: 0.15rem;
+        .abc-ellipse {
+            pointer-events: none; position: absolute; inset: 0; z-index: 5;
+            background: radial-gradient(
+                ellipse 60% 80% at 50% 60%,
+                rgba(59,130,246,0.18) 0%, rgba(59,130,246,0.08) 40%, transparent 100%
+            );
         }
-        /* Heights = default_rate / 56.0 (max) */
-        .b1 { background: linear-gradient(to top, #16a34a, #22c55e); height: 22%; }
-        .b2 { background: linear-gradient(to top, #65a30d, #84cc16); height: 64%; }
-        .b3 { background: linear-gradient(to top, #ca8a04, #eab308); height: 68%; }
-        .b4 { background: linear-gradient(to top, #ea580c, #f97316); height: 98%; }
-        .b5 { background: linear-gradient(to top, #dc2626, #ef4444); height: 100%; }
-
-        .bucket-labels {
-            display: flex; gap: 5px; margin-top: 0.5rem;
+        .abc-badges {
+            position: absolute; top: 0.7rem; left: 0.7rem;
+            z-index: 9; display: flex; gap: 0.35rem;
+            transition: opacity 0.3s ease;
         }
-        .bucket-labels div {
+        .abc-card.hovered .abc-badges { opacity: 0; }
+        .abc-badge {
+            display: flex; align-items: center; gap: 0.25rem;
+            border-radius: 9999px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(10,16,32,0.75); padding: 0.18rem 0.5rem;
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+        }
+        .abc-badge-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .abc-badge span { font-size: 9.5px; color: var(--slate-light); white-space: nowrap; }
+        /* Gradient overlay slides up on hover */
+        .abc-overlay {
+            pointer-events: none; position: absolute; inset: 0; z-index: 6;
+            background: linear-gradient(to bottom, rgba(59,130,246,0) 35%, rgba(59,130,246,0.22) 100%);
+            transform: translateY(100%); opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.6, 0.6, 0, 1),
+                        opacity    0.5s cubic-bezier(0.6, 0.6, 0, 1);
+        }
+        .abc-card.hovered .abc-overlay { transform: translateY(0); opacity: 1; }
+        /* Tooltip slides in from right on hover */
+        .abc-tooltip-wrap {
+            position: absolute; bottom: 0.7rem; right: 0.7rem; z-index: 12;
+            transform: translateX(120%); opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.6, 0.6, 0, 1),
+                        opacity   0.4s cubic-bezier(0.6, 0.6, 0, 1);
+        }
+        .abc-card.hovered .abc-tooltip-wrap { transform: translateX(0); opacity: 1; }
+        .abc-tooltip-box {
+            border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(10,16,32,0.85); padding: 0.45rem 0.7rem;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            pointer-events: none;
+        }
+        .abc-tooltip-row { display: flex; align-items: center; gap: 0.4rem; }
+        .abc-tooltip-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--blue-light); flex-shrink: 0;
+        }
+        .abc-tooltip-row p { font-size: 11px; color: var(--off-white); margin: 0; }
+        .abc-tooltip-desc { font-size: 10px; color: var(--slate-light); margin: 0.1rem 0 0; }
+        /* Bars container */
+        .abc-bars-wrap {
+            pointer-events: none; position: absolute; inset: 0; z-index: 8;
+            display: flex; align-items: center; justify-content: center;
+        }
+        /*
+         * Bars: y=30, h=170. scaleY = (AUC − 0.5) / 0.264
+         * transform-origin: center bottom → bars grow/shrink from baseline.
+         */
+        .abc-bar {
+            transform-box: fill-box; transform-origin: center bottom;
+            transition: transform 0.5s cubic-bezier(0.6, 0.6, 0, 1), fill 0.4s ease;
+        }
+        /* AUC-ROC default state — warm→cool spectrum, worst→best */
+        #abc-b0 { transform: scaleY(0.708); fill: #f87171; } /* Traditional  AUC 0.687 */
+        #abc-b1 { transform: scaleY(0.879); fill: #fb923c; } /* XGBoost      AUC 0.732 */
+        #abc-b2 { transform: scaleY(0.989); fill: #fbbf24; } /* LogReg       AUC 0.761 */
+        #abc-b3 { transform: scaleY(0.989); fill: #4ade80; } /* LightGBM     AUC 0.761 */
+        #abc-b4 { transform: scaleY(0.992); fill: #38bdf8; } /* Combined     AUC 0.762 */
+        #abc-b5 { transform: scaleY(1.000); fill: #818cf8; } /* CatBoost ★  AUC 0.764 */
+        /* Hover: Gini coefficients — same hues, lighter */
+        .abc-card.hovered #abc-b0 { transform: scaleY(0.710); fill: #fca5a5; } /* Gini 0.374 */
+        .abc-card.hovered #abc-b1 { transform: scaleY(0.879); fill: #fdba74; } /* Gini 0.463 */
+        .abc-card.hovered #abc-b2 { transform: scaleY(0.992); fill: #fde68a; } /* Gini 0.523 */
+        .abc-card.hovered #abc-b3 { transform: scaleY(0.991); fill: #86efac; } /* Gini 0.522 */
+        .abc-card.hovered #abc-b4 { transform: scaleY(0.992); fill: #7dd3fc; } /* Gini 0.523 */
+        .abc-card.hovered #abc-b5 { transform: scaleY(1.000); fill: #a5b4fc; } /* Gini 0.527 */
+        /* Value labels row — above bars */
+        .abc-val-row {
+            pointer-events: none; position: absolute; top: 6px;
+            left: 0; right: 0; height: 20px; z-index: 11;
+        }
+        .abc-val {
+            position: absolute; transform: translateX(-50%);
+            font-size: 9px; font-weight: 700; white-space: nowrap;
+            text-align: center;
+        }
+        .abc-val .v-auc {
+            display: block; color: rgba(255,255,255,0.8);
+            transition: opacity 0.3s ease;
+        }
+        .abc-val .v-gini {
+            display: block; opacity: 0; color: #e0e7ff;
+            transition: opacity 0.3s ease;
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+        }
+        .abc-card.hovered .abc-val .v-auc  { opacity: 0; }
+        .abc-card.hovered .abc-val .v-gini { opacity: 1; }
+        /* Model name labels row — below bars, inside visual */
+        .abc-name-row {
+            pointer-events: none; position: absolute;
+            bottom: 3px; left: 0; right: 0; height: 16px; z-index: 11;
+        }
+        .abc-name {
+            position: absolute; transform: translateX(-50%);
+            font-size: 7px; color: rgba(255,255,255,0.45);
+            text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;
+        }
+        /* Card body */
+        .abc-body {
+            display: flex; flex-direction: column; gap: 0.3rem;
+            border-top: 1px solid rgba(255,255,255,0.06); padding: 1rem;
+        }
+        .abc-title { font-size: 0.95rem; font-weight: 600; color: var(--white); margin: 0; }
+        .abc-desc  { font-size: 0.78rem; color: var(--slate-light); margin: 0; }
+        /* Labels row under card */
+        .abc-labels {
+            display: flex; width: 100%;
+        }
+        .abc-label {
             flex: 1; text-align: center;
-            font-size: 0.6rem; color: var(--slate-light);
-            text-transform: uppercase; letter-spacing: 0.04em;
-            line-height: 1.4;
+            font-size: 0.58rem; color: var(--slate-light);
+            text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.4;
+            padding: 0.3rem 0;
         }
 
         /* ─── NOTE / INFO BOX ─── */
@@ -503,11 +704,20 @@
 
         /* ─── RESPONSIVE ─── */
         @media (max-width: 768px) {
-            .nav-links { display: none; }
+            .tubelight-nav { display: none; }
+            .tl-ext-links { display: none; }
             .hamburger { display: flex; }
             .accuracy-compare { grid-template-columns: 1fr; }
             .chart-grid { grid-template-columns: 1fr; }
             .feat-name { width: 160px; }
+            /* Collapse hardcoded multi-column grids */
+            .card-grid[style*="repeat(3"],
+            .card-grid[style*="repeat(2"] { grid-template-columns: 1fr !important; }
+            div[style*="grid-template-columns:1fr 1fr"],
+            div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+            .mo-row { flex-direction: column; gap: 0.4rem; }
+            .mo-row-label { width: auto; text-align: left; }
+            .mo-row-note  { width: auto; }
         }
         @media (max-width: 640px) {
             .hero { padding: 6rem 1.5rem 4rem; }
@@ -519,43 +729,304 @@
             .buckets { height: 150px; }
         }
 
+        /* ─── CIRCULAR PIPELINE ─── */
+        .circular-pipeline {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 3.5rem;
+        }
+        .cp-outer {
+            position: relative;
+            width: 280px; height: 280px;
+            flex-shrink: 0;
+            animation: cp-float 5s ease-in-out infinite;
+        }
+        @keyframes cp-float {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-10px); }
+        }
+        .cp-disc {
+            position: absolute; inset: 0;
+            border-radius: 50%;
+            background: var(--navy-light);
+            box-shadow:
+                18px 18px 36px rgba(0,0,0,0.55),
+                -4px -4px 12px rgba(255,255,255,0.025),
+                0 0 0 1px rgba(255,255,255,0.07);
+        }
+        .cp-ring1 {
+            position: absolute; inset: 3px;
+            border-radius: 50%;
+            box-shadow: inset 5px 5px 12px rgba(0,0,0,0.45),
+                        inset -3px -3px 8px rgba(255,255,255,0.03);
+        }
+        .cp-ring2 {
+            position: absolute; inset: 14px;
+            border-radius: 50%;
+            box-shadow: inset 3px 3px 8px rgba(0,0,0,0.3),
+                        inset -2px -2px 5px rgba(255,255,255,0.02);
+        }
+        /* Center (default) */
+        .cp-center {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 10; text-align: center;
+            transition: opacity 0.25s;
+            pointer-events: none;
+        }
+        .cp-center-label {
+            font-size: 0.57rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.15em;
+            color: var(--slate); margin-bottom: 0.25rem;
+        }
+        .cp-center-title {
+            font-size: 1.45rem; font-weight: 700;
+            letter-spacing: -0.03em; color: var(--white);
+            line-height: 1;
+        }
+        .cp-center-title span { color: var(--blue-light); }
+        .cp-center-sub {
+            font-size: 0.6rem; color: var(--slate-light);
+            margin-top: 0.25rem; font-family: var(--mono);
+            letter-spacing: 0.04em;
+        }
+        /* Hover info */
+        .cp-hover {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 10; text-align: center; padding: 2.5rem;
+            opacity: 0; transition: opacity 0.25s;
+            pointer-events: none;
+        }
+        .cp-hover-num {
+            font-size: 2.1rem; font-weight: 700;
+            color: var(--blue-light); font-family: var(--mono);
+            line-height: 1;
+        }
+        .cp-hover-label {
+            font-size: 0.68rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.07em;
+            color: var(--off-white); margin-top: 0.4rem; line-height: 1.4;
+        }
+        .cp-hover-desc {
+            font-size: 0.62rem; color: var(--slate-light);
+            margin-top: 0.25rem; line-height: 1.4;
+        }
+        /* Rotating SVG ring */
+        .cp-svg {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            animation: cp-spin 30s linear infinite;
+            pointer-events: none;
+        }
+        .cp-svg.paused { animation-play-state: paused; }
+        @keyframes cp-spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        .cp-text-seg {
+            font-family: var(--mono);
+            font-size: 10.5px;
+            font-weight: 600;
+            fill: #475569;
+            cursor: pointer;
+            pointer-events: all;
+            transition: fill 0.2s;
+        }
+        .cp-text-seg:hover { fill: #93c5fd; }
+        .cp-sep-dot { fill: #3b82f6; opacity: 0.5; }
+
         /* ─── FADE-IN ANIMATION ─── */
         .fade-in {
             opacity: 0; transform: translateY(22px);
             transition: opacity 0.65s ease, transform 0.65s ease;
         }
         .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        /* ─── SCORE DISAGREEMENT STRIP ─── */
+        .ds-wrap { margin: 2rem 0 0; }
+        .ds-axis {
+            display: flex; margin-bottom: 0.45rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.4rem;
+        }
+        .ds-axis-half {
+            font-size: 0.7rem; color: var(--slate);
+            text-transform: uppercase; letter-spacing: 0.06em;
+            text-align: center;
+        }
+        .ds-strip {
+            display: flex; height: 88px;
+            border-radius: 10px; overflow: hidden; gap: 3px;
+        }
+        .ds-seg {
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 0.4rem 0.25rem; cursor: default;
+            transition: filter 0.2s ease;
+        }
+        .ds-seg:hover { filter: brightness(1.18); }
+        .ds-pct  { font-size: 1rem; font-weight: 700; color: #fff; line-height: 1; }
+        .ds-name {
+            font-size: 0.58rem; font-weight: 600; color: rgba(255,255,255,0.8);
+            text-align: center; margin-top: 0.2rem; line-height: 1.3;
+            text-transform: uppercase; letter-spacing: 0.03em;
+        }
+        .ds-def  { font-size: 0.58rem; color: rgba(255,255,255,0.5); margin-top: 0.15rem; }
+        .ds-seg-a { background: rgba(71,85,105,0.45); border: 1px solid rgba(100,116,139,0.25); }
+        .ds-seg-b { background: rgba(29,78,216,0.75);  border: 1px solid rgba(96,165,250,0.4); }
+        .ds-seg-c { background: rgba(180,83,9,0.75);   border: 1px solid rgba(251,146,60,0.4); }
+        .ds-seg-d { background: rgba(21,128,61,0.55);  border: 1px solid rgba(74,222,128,0.3); }
+        .ds-legend {
+            display: flex; gap: 1.25rem; margin-top: 0.75rem; flex-wrap: wrap;
+        }
+        .ds-legend-item {
+            display: flex; align-items: center; gap: 0.35rem;
+            font-size: 0.71rem; color: var(--slate-light);
+        }
+        .ds-legend-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+
+        /* ─── MISSED OPPORTUNITY BARS ─── */
+        .mo-wrap {
+            margin: 2rem 0 0;
+            background: rgba(29,78,216,0.05);
+            border: 1px solid rgba(59,130,246,0.14);
+            border-radius: 12px; padding: 1.4rem 1.5rem;
+        }
+        .mo-intro {
+            font-size: 0.82rem; color: var(--slate-light);
+            margin-bottom: 1.25rem; line-height: 1.6;
+        }
+        .mo-intro strong { color: var(--off-white); }
+        .mo-row {
+            display: flex; align-items: center;
+            gap: 0.75rem; margin-bottom: 0.65rem;
+        }
+        .mo-row:last-of-type { margin-bottom: 0; }
+        .mo-row-label {
+            width: 130px; flex-shrink: 0;
+            font-size: 0.7rem; color: var(--slate);
+            text-align: right; line-height: 1.4;
+        }
+        .mo-bar-outer {
+            flex: 1; height: 38px; border-radius: 6px;
+            overflow: hidden; display: flex;
+            background: rgba(255,255,255,0.03);
+        }
+        .mo-seg {
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.63rem; font-weight: 600;
+            color: rgba(255,255,255,0.85); white-space: nowrap;
+            padding: 0 0.4rem; transition: filter 0.2s;
+        }
+        .mo-seg:hover { filter: brightness(1.18); }
+        .mo-seg-declined { background: rgba(71,85,105,0.4); }
+        .mo-seg-rescued  { background: rgba(29,78,216,0.8); }
+        .mo-seg-safe     { background: rgba(21,128,61,0.55); }
+        .mo-seg-risky    { background: rgba(180,83,9,0.75); }
+        .mo-row-note {
+            width: 150px; flex-shrink: 0;
+            font-size: 0.67rem; color: var(--slate); line-height: 1.4;
+        }
+        .mo-row-note strong { color: var(--blue-light); }
+        .mo-row-note .tag-opp  { color: #60a5fa; font-weight: 700; }
+        .mo-row-note .tag-risk { color: #fb923c; font-weight: 700; }
+        .mo-callout {
+            margin-top: 1.1rem; padding: 0.7rem 1rem;
+            background: rgba(29,78,216,0.1);
+            border-left: 3px solid var(--blue);
+            border-radius: 0 8px 8px 0;
+            font-size: 0.8rem; color: var(--slate-light);
+        }
+        .mo-callout strong { color: var(--blue-light); }
+
+        /* ─── GLOWING BORDER EFFECT ─── */
+        /*
+         * Atmospheric halo: ::before extends 28px beyond the card and
+         * filter:blur(22px) softens it — no overflow:hidden so the blur
+         * spills outward freely, matching the screenshot reference.
+         */
+        .glow-wrapper {
+            position: relative;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .glow-wrapper > .card,
+        .glow-wrapper > .acc-card {
+            position: relative;
+            z-index: 1;
+            flex: 1; /* stretch to grid-row height → equal-height cards */
+        }
+        .glow-border {
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            z-index: 0;
+        }
+        .glow-border::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: conic-gradient(
+                from 0deg at 50% 50%,
+                #0894FF,
+                #C959DD,
+                #FF2E54,
+                #FF9004,
+                #0894FF
+            );
+            /* animation: glow-spin 5s linear infinite; */
+            animation: 5s linear infinite;
+            filter: blur(10px);
+            opacity: 0.72;
+        }
+        /* @keyframes glow-spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        } */
     </style>
 </head>
 <body>
 
 <!-- ─── NAV ─── -->
-<nav>
-    <div class="logo">Flow<span>Score</span></div>
-    <div class="nav-links">
-        <a href="#problem">Problem</a>
-        <a href="#pipeline">Pipeline</a>
-        <a href="#categorization">Categorization</a>
-        <a href="#results">Results</a>
-        <a href="#value">Business Value</a>
-        <a href="#fairness">Fairness</a>
-        <a href="#prism-pitch">For Lenders</a>
-        <a href="https://flowscore.streamlit.app" target="_blank" class="gh-btn">Live Demo ↗</a>
-        <a href="https://github.com/jessicabat/flowscore" target="_blank" class="gh-btn">GitHub ↗</a>
-    </div>
-    <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
-        <span></span><span></span><span></span>
-    </button>
+<a class="tl-logo" href="#"><span class="logo-flow">Flow</span><span class="logo-score">Score</span></a>
+
+<div class="tl-ext-links">
+    <a href="https://flowscore.streamlit.app" target="_blank" class="tl-ext-btn">Live Demo ↗</a>
+    <a href="https://github.com/jessicabat/flowscore" target="_blank" class="tl-ext-btn">GitHub ↗</a>
+</div>
+
+<nav class="tubelight-nav" id="tubelight-nav">
+    <div id="tl-lamp"></div>
+    <a class="tl-item" href="#problem">Problem</a>
+    <a class="tl-item" href="#pipeline">Pipeline</a>
+    <a class="tl-item" href="#results">Results</a>
+    <a class="tl-item" href="#value">Value</a>
+    <a class="tl-item" href="#walkthrough">Walkthrough</a>
+    <a class="tl-item" href="#methodology">Methodology</a>
+    <a class="tl-item" href="#fairness">Fairness</a>
+    <a class="tl-item" href="#lenders">For Lenders</a>
 </nav>
 
+<button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span><span></span><span></span>
+</button>
+
 <div class="mobile-menu" id="mobile-menu">
-    <a href="#problem"       onclick="closeMobile()">Problem</a>
-    <a href="#pipeline"      onclick="closeMobile()">Pipeline</a>
-    <a href="#categorization" onclick="closeMobile()">Categorization</a>
-    <a href="#results"       onclick="closeMobile()">Results</a>
-    <a href="#value"         onclick="closeMobile()">Business Value</a>
-    <a href="#fairness"      onclick="closeMobile()">Fairness</a>
-    <a href="#prism-pitch"   onclick="closeMobile()">For Lenders</a>
+    <a href="#problem"      onclick="closeMobile()">Problem</a>
+    <a href="#pipeline"     onclick="closeMobile()">Pipeline</a>
+    <a href="#results"      onclick="closeMobile()">Results</a>
+    <a href="#value"        onclick="closeMobile()">Business Value</a>
+    <a href="#walkthrough"  onclick="closeMobile()">Walkthrough</a>
+    <a href="#methodology"  onclick="closeMobile()">Methodology</a>
+    <a href="#fairness"     onclick="closeMobile()">Fairness</a>
+    <a href="#lenders"      onclick="closeMobile()">For Lenders</a>
+    <a href="https://flowscore.streamlit.app" target="_blank">Live Demo ↗</a>
     <a href="https://github.com/jessicabat/flowscore" target="_blank">GitHub ↗</a>
 </div>
 
@@ -567,35 +1038,96 @@
     </div>
     <h1>Credit scoring from<br><span class="accent">cash flow data</span></h1>
     <p class="subtitle">
-        A full ML pipeline that predicts credit default risk from bank transaction data alone,
-        with no credit bureau history required. Built on the principles of modern
-        cash flow underwriting: categorization → behavioral features → predictive scoring.
+        An end-to-end ML pipeline that predicts credit default risk from bank transaction patterns
+        alone, without needing any credit bureau history. The system covers the three stages of
+        cash flow underwriting: transaction categorization, behavioral feature engineering, and risk scoring.
     </p>
-    <div class="pipeline">
-        <div class="step"><span class="step-num">1</span>Raw Transactions</div>
-        <span class="arrow">→</span>
-        <div class="step"><span class="step-num">2</span>DistilBERT Categorization</div>
-        <span class="arrow">→</span>
-        <div class="step"><span class="step-num">3</span>45 Behavioral Features</div>
-        <span class="arrow">→</span>
-        <div class="step"><span class="step-num">4</span>FlowScore (300–850)</div>
+    <div class="circular-pipeline">
+        <div class="cp-outer" id="cp-outer">
+            <div class="cp-disc"></div>
+            <div class="cp-ring1"></div>
+            <div class="cp-ring2"></div>
+
+            <!-- Default center label -->
+            <div class="cp-center" id="cp-center">
+                <div class="cp-center-label">ML Pipeline</div>
+                <div class="cp-center-title">Flow<span>Score</span></div>
+                <div class="cp-center-sub">hover to explore</div>
+            </div>
+
+            <!-- Step info shown on hover -->
+            <div class="cp-hover" id="cp-hover">
+                <div class="cp-hover-num" id="cp-hover-num">1</div>
+                <div class="cp-hover-label" id="cp-hover-label">Raw Transactions</div>
+                <div class="cp-hover-desc" id="cp-hover-desc">Bank statement data input</div>
+            </div>
+
+            <!--
+                viewBox 280×280, center 140,140, text-path radius 122.
+                4 segments × 65° each + 4 gaps × 25° = 360°.
+                Arc per segment ≈ 2π×122×(65/360) ≈ 138 px → textLength="132".
+                startOffsets: 1% / 26% / 51% / 76%
+            -->
+            <svg class="cp-svg" id="cp-svg" viewBox="0 0 280 280">
+                <defs>
+                    <linearGradient id="cpGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%"   stop-color="#475569"/>
+                        <stop offset="50%"  stop-color="#cbd5e1"/>
+                        <stop offset="100%" stop-color="#475569"/>
+                    </linearGradient>
+                </defs>
+                <path id="cp-curve" fill="none" stroke="none"
+                    d="M 140,140 m -122,0 a 122,122 0 1,1 244,0 a 122,122 0 1,1 -244,0"/>
+
+                <!-- Separator dots (placed at gap midpoints: 23.5%, 48.5%, 73.5%, 98.5%) -->
+                <circle class="cp-sep-dot" r="2.5" cx="140" cy="18"/>  <!-- ~270° = top -->
+                <circle class="cp-sep-dot" r="2.5" cx="262" cy="140"/> <!-- ~0°   = right -->
+                <circle class="cp-sep-dot" r="2.5" cx="140" cy="262"/> <!-- ~90°  = bottom -->
+                <circle class="cp-sep-dot" r="2.5" cx="18"  cy="140"/> <!-- ~180° = left -->
+
+                <text class="cp-text-seg" id="cp-seg-0">
+                    <textPath href="#cp-curve" startOffset="1%"
+                        textLength="132" lengthAdjust="spacingAndGlyphs">
+                        1  RAW TRANSACTIONS
+                    </textPath>
+                </text>
+                <text class="cp-text-seg" id="cp-seg-1">
+                    <textPath href="#cp-curve" startOffset="26%"
+                        textLength="132" lengthAdjust="spacingAndGlyphs">
+                        2  DISTILBERT CATEG.
+                    </textPath>
+                </text>
+                <text class="cp-text-seg" id="cp-seg-2">
+                    <textPath href="#cp-curve" startOffset="51%"
+                        textLength="132" lengthAdjust="spacingAndGlyphs">
+                        3  BEHAVIORAL FEAT.
+                    </textPath>
+                </text>
+                <text class="cp-text-seg" id="cp-seg-3">
+                    <textPath href="#cp-curve" startOffset="76%"
+                        textLength="132" lengthAdjust="spacingAndGlyphs">
+                        4  FLOWSCORE 300–850
+                    </textPath>
+                </text>
+            </svg>
+        </div>
     </div>
     <div class="stats-row">
         <div class="stat">
-            <div class="num blue">0.764</div>
-            <div class="label">AUC-ROC<br>CatBoost + Optuna</div>
+            <div class="num blue">22.4%</div>
+            <div class="label">of rejected applicants<br>recovered by FlowScore</div>
         </div>
         <div class="stat">
-            <div class="num green">+11.2%</div>
-            <div class="label">AUC Lift over<br>Traditional Score</div>
+            <div class="num green">−30.4%</div>
+            <div class="label">fewer defaults at the<br>same approval volume</div>
         </div>
         <div class="stat">
-            <div class="num">30.4%</div>
-            <div class="label">Loss Reduction<br>@ 70% Approval Rate</div>
+            <div class="num">14.8%</div>
+            <div class="label">default rate for the<br>recovered applicants</div>
         </div>
         <div class="stat">
-            <div class="num">61.3%</div>
-            <div class="label">of Rejected Borrowers<br>Would Repay</div>
+            <div class="num">29.4×</div>
+            <div class="label">more approvals for<br>thin-file consumers</div>
         </div>
     </div>
     <div class="scroll-hint">
@@ -607,39 +1139,74 @@
 <!-- ─── PROBLEM ─── -->
 <section id="problem" class="fade-in">
     <div class="section-label">The Problem</div>
-    <div class="section-title">76 million Americans are invisible to traditional credit</div>
+    <div class="section-title">76 million Americans are invisible to traditional credit <span style="font-size:0.55rem;font-weight:400;color:var(--slate);vertical-align:super;letter-spacing:0;">(CFPB)</span></div>
     <div class="section-desc">
-        Traditional credit scores depend entirely on bureau history. If you've never had a credit card,
-        loan, or line of credit, you simply don't exist to lenders. But your bank account tells a
-        different story: steady deposits, consistent rent, disciplined spending.
-        Cash flow underwriting reads that story.
+        Traditional credit scores rely entirely on bureau history. If you've never had a credit card,
+        loan, or line of credit, you likely don't show up in lender systems at all. But your bank
+        account still tells a story: steady deposits, consistent rent, careful spending.
+        Cash flow underwriting tries to read that story.
     </div>
     <div class="card-grid">
         <div class="card">
             <div class="card-label">Missed Opportunity</div>
-            <div class="card-value" style="color: var(--blue-light);">61.3%</div>
+            <div class="card-value" style="color: var(--blue-light);">22.4%</div>
             <div class="card-desc">
-                of borrowers rejected by traditional scores would actually repay their loans.
-                That's 285 out of 465 rejected consumers, creditworthy borrowers the market never sees.
+                of applicants rejected by traditional scoring have strong cash flow signals and
+                a 14.8% actual default rate — well below the 25% dataset average.
+                That's 135 of 603 rejected consumers FlowScore identifies as recoverable.
             </div>
         </div>
         <div class="card">
             <div class="card-label">Avoidable Risk</div>
-            <div class="card-value" style="color: var(--red);">16.9%</div>
+            <div class="card-value" style="color: var(--red);">20.7%</div>
             <div class="card-desc">
-                of borrowers approved by traditional scores actually default.
-                Their credit history looked fine. Their cash flow said otherwise.
-                That's 133 of 785 approved consumers.
+                of applicants approved by traditional scoring have poor cash flow signals
+                and a 32.1% actual default rate — more than triple the rate of confirmed-safe approvals.
+                That's 134 of 647 approved consumers the bureau score missed.
             </div>
         </div>
         <div class="card">
             <div class="card-label">FlowScore</div>
             <div class="card-value" style="color: var(--green);">300–850</div>
             <div class="card-desc">
-                A calibrated cash flow credit score derived purely from transaction behavior.
-                Higher score = lower default probability. Same intuition as FICO,
-                built from behavior not history.
+                A cash flow credit score calibrated to the 300–850 range. Higher score corresponds
+                to lower default probability. Same basic intuition as FICO, but grounded in spending
+                and income patterns rather than credit file history.
             </div>
+        </div>
+    </div>
+
+    <!-- Missed Opportunity visualization -->
+    <div class="mo-wrap">
+        <p class="mo-intro">
+            <strong>Where do the 1,250 evaluated consumers actually fall?</strong>
+            Each bar shows how cash flow scoring reclassifies a group that traditional scoring treats as a single block.
+        </p>
+
+        <div class="mo-row">
+            <div class="mo-row-label">Trad. rejected<br>603 consumers</div>
+            <div class="mo-bar-outer">
+                <!-- 77.6% correctly declined, 22.4% missed opportunity -->
+                <div class="mo-seg mo-seg-declined" style="width:77.6%">468 correctly declined · 43.6% default</div>
+                <div class="mo-seg mo-seg-rescued"  style="width:22.4%">135 would repay</div>
+            </div>
+            <div class="mo-row-note"><span class="tag-opp">22.4% Missed Opportunity</span><br>14.8% default rate</div>
+        </div>
+
+        <div class="mo-row">
+            <div class="mo-row-label">Trad. approved<br>647 consumers</div>
+            <div class="mo-bar-outer">
+                <!-- 79.3% confirmed safe, 20.7% avoidable risk -->
+                <div class="mo-seg mo-seg-safe"  style="width:79.3%">513 confirmed safe · 9.0% default</div>
+                <div class="mo-seg mo-seg-risky" style="width:20.7%">134 risky</div>
+            </div>
+            <div class="mo-row-note"><span class="tag-risk">20.7% Avoidable Risk</span><br>32.1% default rate</div>
+        </div>
+
+        <div class="mo-callout">
+            The <strong>missed opportunity segment (14.8% default rate)</strong> is well below the 25% dataset average,
+            meaning these are genuinely manageable approvals. FlowScore separates them from the correctly-declined group
+            using spending patterns and income regularity that bureau data simply doesn't capture.
         </div>
     </div>
 </section>
@@ -651,8 +1218,9 @@
     <div class="section-label">The Pipeline</div>
     <div class="section-title">From raw transactions to a credit decision</div>
     <div class="section-desc">
-        FlowScore implements the full cash flow underwriting stack used in modern open banking credit:
-        transaction categorization, behavioral feature extraction, and risk scoring. Each stage is independently runnable.
+        FlowScore covers the three main stages of a cash flow underwriting pipeline:
+        transaction categorization, behavioral feature extraction, and risk scoring. Each stage is
+        independently runnable and designed to mirror how real open banking systems are structured.
     </div>
 
     <div class="card-grid" style="margin-bottom: 2.5rem;">
@@ -670,7 +1238,7 @@
             <div class="card-value" style="font-size: 1.15rem;">45 Behavioral Features</div>
             <div class="card-desc">
                 Income stability, savings rate, obligation-to-income ratio, overdraft frequency,
-                loan stacking, gambling activity, BNPL usage — the behavioral signals
+                loan stacking, gambling activity, BNPL usage: the behavioral signals
                 that open banking underwriting is built on.
             </div>
         </div>
@@ -685,7 +1253,7 @@
         </div>
     </div>
 
-    <div class="section-label" style="margin-top: 3rem;">Top Predictive Features by SHAP Value</div>
+    <div class="section-label" style="margin-top: 2.5rem;">Top Predictive Features by SHAP Value</div>
     <p style="color: var(--slate-light); font-size: 0.87rem; margin-bottom: 1.25rem;">
         Mean absolute SHAP value across 1,250 held-out consumers (CatBoost model).
         Bars are proportional to predictive impact on default probability.
@@ -753,8 +1321,8 @@
     <div class="section-title">Why rules alone aren't enough</div>
     <div class="section-desc">
         Real bank statements are messy. "CHIPOTLE" becomes "CHIPTL *ONL #839 SAN DIEGO CA 04/12".
-        The same test set of 6,209 transactions was run under three conditions to isolate
-        the value of noise-tolerance and LLM augmentation.
+        I ran the same set of 6,209 transactions under three conditions to measure how much the
+        pipeline degrades with realistic noise, and how much a fine-tuned model can recover.
     </div>
 
     <div class="accuracy-compare">
@@ -792,19 +1360,18 @@
                 <div class="acc-bar" style="width:91.5%; background: var(--blue-light);"></div>
             </div>
             <div class="acc-note">
-                Fine-tuned DistilBERT handles 1,040 ambiguous transactions locally.
-                No API calls, no cost, no latency. The 4-point gap vs the Claude hybrid
-                reflects a train-clean / test-noisy distribution mismatch.
+                Fine-tuned DistilBERT classifies the 1,040 ambiguous transactions locally.
+                The 4-point gap versus the Claude hybrid likely comes from a train-on-clean /
+                test-on-noisy distribution mismatch, which more diverse training data could address.
             </div>
         </div>
     </div>
 
     <div class="note">
-        <strong>Design rationale:</strong> The rule engine is fast, free, and handles ~83% of
-        real-world transactions correctly. A fine-tuned DistilBERT model handles the ~17% that rules
-        can't confidently match, running entirely locally with no API cost or latency.
-        This is how production transaction categorization engines are built: rules for coverage,
-        a trained model for ambiguity resolution.
+        <strong>Design rationale:</strong> The rule engine is fast and handles ~83% of transactions.
+        A fine-tuned DistilBERT model picks up the ~17% that rules can't confidently match,
+        running entirely locally without any API cost. This pattern (rules for coverage, a model
+        for ambiguity) seems to be how most production categorization systems approach the problem.
     </div>
 </section>
 
@@ -813,11 +1380,11 @@
 <!-- ─── RESULTS ─── -->
 <section id="results" class="fade-in">
     <div class="section-label">Model Results</div>
-    <div class="section-title">Cash flow beats traditional scoring</div>
+    <div class="section-title">Cash flow features improve on the baseline</div>
     <div class="section-desc">
         Evaluated on 1,250 held-out consumers (25.0% default rate, stratified split).
-        The best cash flow model outperforms the traditional score baseline across all metrics.
-        Combining both confirms orthogonality: each source captures signal the other misses.
+        The best cash flow model improves on the traditional score baseline across all metrics.
+        Combining both features confirms they capture different information about the same consumers.
     </div>
 
     <div class="table-wrap">
@@ -880,46 +1447,99 @@
 
     <div class="note">
         <strong>Why tree ensembles and LR are so close here:</strong>
-        The 45 features are well-engineered linear signals (ratios, slopes, counts), which benefits
-        LR. CatBoost's symmetric tree structure gives it a small edge (0.7637 vs 0.7613 for LR).
-        On messier real-world data with noisier, less structured features, the gap between tree
-        ensembles and LR would likely widen in favor of gradient boosting.
+        the 45 features are mostly linear signals (ratios, slopes, counts), which happens to suit
+        logistic regression pretty well. CatBoost's symmetric tree structure gives it a small edge
+        (0.7637 vs 0.7613 for LR). My expectation is that on noisier, less structured real-world data,
+        gradient boosting would pull further ahead.
     </div>
 
-    <div class="chart-grid" style="margin-top: 2.5rem;">
-        <div>
-            <div class="chart-label">ROC Curves: All Four Models</div>
-            <img src="data/model_results/roc_curves.png"
-                 alt="ROC curves comparing all four models" class="chart-img">
-        </div>
-        <div>
-            <div class="chart-label">FlowScore Risk Bucket Default Rates</div>
-            <img src="data/model_results/risk_buckets.png"
-                 alt="Default rate by FlowScore risk bucket" class="chart-img">
-        </div>
+    <div style="margin-top: 2.5rem;">
+        <div class="chart-label">ROC Curves: All Four Models</div>
+        <img src="data/model_results/roc_curves.png"
+             alt="ROC curves comparing all four models" class="chart-img">
     </div>
 
-    <div class="section-label" style="margin-top: 3rem;">FlowScore Risk Buckets</div>
+    <div class="section-label" style="margin-top: 2.5rem;">Model Comparison</div>
     <p style="color: var(--slate-light); font-size: 0.87rem; margin-bottom: 0.75rem;">
-        Observed default rate by score segment. Bar height is proportional to default rate (56% max).
-        Clear monotonic separation from the lowest to highest risk tier.
+        AUC-ROC across all six models, ordered by performance. Hover to see Gini coefficients.
+        Bar height shows lift above random (AUC 0.5 baseline).
     </p>
-    <div class="buckets-wrap">
-        <div class="buckets">
-            <div class="bucket b1"><div class="pct">4.7%</div><div class="bcount">n=85</div></div>
-            <div class="bucket b2"><div class="pct">11.0%</div><div class="bcount">n=563</div></div>
-            <div class="bucket b3"><div class="pct">21.5%</div><div class="bcount">n=186</div></div>
-            <div class="bucket b4"><div class="pct">43.3%</div><div class="bcount">n=208</div></div>
-            <div class="bucket b5"><div class="pct">56.3%</div><div class="bcount">n=208</div></div>
+
+    <div class="abc-card" id="abc-risk-card">
+        <div class="abc-visual">
+            <div class="abc-grid"></div>
+            <div class="abc-ellipse"></div>
+
+            <!-- Badge pills — fade out on hover -->
+            <div class="abc-badges">
+                <div class="abc-badge">
+                    <div class="abc-badge-dot" style="background:#f87171"></div>
+                    <span>Traditional 0.687</span>
+                </div>
+                <div class="abc-badge">
+                    <div class="abc-badge-dot" style="background:#818cf8"></div>
+                    <span>CatBoost 0.764 ★</span>
+                </div>
+            </div>
+
+            <!-- Gradient overlay — slides up on hover -->
+            <div class="abc-overlay"></div>
+
+            <!-- Tooltip — slides up on hover -->
+            <div class="abc-tooltip-wrap">
+                <div class="abc-tooltip-box">
+                    <div class="abc-tooltip-row">
+                        <div class="abc-tooltip-dot"></div>
+                        <p>Gini Coefficients <span style="font-weight:400;color:rgba(255,255,255,0.5);">· discriminatory power</span></p>
+                    </div>
+                    <p class="abc-tooltip-desc">2 × AUC − 1 · higher is better</p>
+                </div>
+            </div>
+
+            <!--
+                6 bars: Traditional → XGBoost → LogReg → LightGBM → Combined → CatBoost
+                All at full height (y=30, h=170). scaleY = (AUC − 0.5) / 0.264
+                On .hovered: scaleY = Gini / 0.527, softer color palette
+            -->
+            <div class="abc-bars-wrap">
+                <svg width="100%" height="100%" viewBox="0 0 1000 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect class="abc-bar" id="abc-b0" x="57"  width="100" y="30" height="170" rx="6"/>
+                    <rect class="abc-bar" id="abc-b1" x="214" width="100" y="30" height="170" rx="6"/>
+                    <rect class="abc-bar" id="abc-b2" x="371" width="100" y="30" height="170" rx="6"/>
+                    <rect class="abc-bar" id="abc-b3" x="528" width="100" y="30" height="170" rx="6"/>
+                    <rect class="abc-bar" id="abc-b4" x="685" width="100" y="30" height="170" rx="6"/>
+                    <rect class="abc-bar" id="abc-b5" x="842" width="100" y="30" height="170" rx="6"/>
+                </svg>
+            </div>
+
+            <!-- Value labels above bars (AUC default → Gini on hover) -->
+            <!-- left% = (bar_x + 50) / 1000 * 100  (bar center as % of viewBox width) -->
+            <div class="abc-val-row">
+                <span class="abc-val" style="left:10.7%"><span class="v-auc">0.687</span><span class="v-gini">0.374</span></span>
+                <span class="abc-val" style="left:26.4%"><span class="v-auc">0.732</span><span class="v-gini">0.463</span></span>
+                <span class="abc-val" style="left:42.1%"><span class="v-auc">0.761</span><span class="v-gini">0.523</span></span>
+                <span class="abc-val" style="left:57.8%"><span class="v-auc">0.761</span><span class="v-gini">0.522</span></span>
+                <span class="abc-val" style="left:73.5%"><span class="v-auc">0.762</span><span class="v-gini">0.523</span></span>
+                <span class="abc-val" style="left:89.2%"><span class="v-auc">0.764</span><span class="v-gini">0.527</span></span>
+            </div>
+
+            <!-- Model name labels below bars -->
+            <div class="abc-name-row">
+                <span class="abc-name" style="left:10.7%">Traditional</span>
+                <span class="abc-name" style="left:26.4%">XGBoost</span>
+                <span class="abc-name" style="left:42.1%">Log. Reg.</span>
+                <span class="abc-name" style="left:57.8%">LightGBM</span>
+                <span class="abc-name" style="left:73.5%">Combined</span>
+                <span class="abc-name" style="left:89.2%">CatBoost ★</span>
+            </div>
         </div>
-        <div class="bucket-labels">
-            <div>Very Low<br>750+</div>
-            <div>Low<br>650–749</div>
-            <div>Medium<br>550–649</div>
-            <div>High<br>450–549</div>
-            <div>Very High<br>&lt;450</div>
+
+        <div class="abc-body">
+            <h3 class="abc-title">AUC-ROC · All Models</h3>
+            <p class="abc-desc">Cash flow models outperform the traditional score baseline by up to +11.2% AUC · hover for Gini</p>
         </div>
     </div>
+
 </section>
 
 <div class="divider"></div>
@@ -927,11 +1547,69 @@
 <!-- ─── BUSINESS VALUE ─── -->
 <section id="value" class="fade-in wide">
     <div class="section-label">Business Value</div>
-    <div class="section-title">The orthogonality matrix</div>
+    <div class="section-title">Where the two scores disagree</div>
     <div class="section-desc">
-        Traditional and cash flow scores capture fundamentally different information about default risk.
-        Each cell shows the observed default rate for that segment, revealing both the missed
-        opportunities and avoidable risks hidden in traditional underwriting.
+        21.5% of consumers are misclassified by traditional scoring alone. Cash flow features
+        reveal who's been missed and who's riskier than their credit file suggests.
+    </div>
+
+    <!-- Score disagreement strip -->
+    <div class="ds-wrap">
+        <!-- axis labels proportional to the two groups (48.2% / 51.8%) -->
+        <div class="ds-axis">
+            <div class="ds-axis-half" style="width:48.2%">Traditional &lt; 660 · Rejected (48.2%)</div>
+            <div class="ds-axis-half" style="width:51.8%">Traditional ≥ 660 · Approved (51.8%)</div>
+        </div>
+        <div class="ds-strip">
+            <!-- 468/1250 = 37.4% -->
+            <div class="ds-seg ds-seg-a" style="width:37.4%">
+                <div class="ds-pct">37.4%</div>
+                <div class="ds-name">Both Agree<br>High Risk</div>
+                <div class="ds-def">n=468 · 43.6% def.</div>
+            </div>
+            <!-- 135/1250 = 10.8% -->
+            <div class="ds-seg ds-seg-b" style="width:10.8%">
+                <div class="ds-pct">10.8%</div>
+                <div class="ds-name">Missed<br>Opportunity</div>
+                <div class="ds-def">n=135 · 14.8%</div>
+            </div>
+            <!-- 134/1250 = 10.7% -->
+            <div class="ds-seg ds-seg-c" style="width:10.7%">
+                <div class="ds-pct">10.7%</div>
+                <div class="ds-name">Avoidable<br>Risk</div>
+                <div class="ds-def">n=134 · 32.1%</div>
+            </div>
+            <!-- 513/1250 = 41.0% -->
+            <div class="ds-seg ds-seg-d" style="width:41.0%">
+                <div class="ds-pct">41.0%</div>
+                <div class="ds-name">Both Agree<br>Low Risk</div>
+                <div class="ds-def">n=513 · 9.0% def.</div>
+            </div>
+        </div>
+        <div class="ds-legend">
+            <div class="ds-legend-item">
+                <div class="ds-legend-dot" style="background:rgba(71,85,105,0.7)"></div>
+                Both agree: decline (n=468)
+            </div>
+            <div class="ds-legend-item">
+                <div class="ds-legend-dot" style="background:#1d4ed8"></div>
+                Missed Opportunity: rejected by bureau, safe in cash flow (n=135)
+            </div>
+            <div class="ds-legend-item">
+                <div class="ds-legend-dot" style="background:#b45309"></div>
+                Avoidable Risk: approved by bureau, flagged by cash flow (n=134)
+            </div>
+            <div class="ds-legend-item">
+                <div class="ds-legend-dot" style="background:#15803d"></div>
+                Both agree: approve (n=513)
+            </div>
+        </div>
+    </div>
+
+    <div class="section-label" style="margin-top: 2.5rem;">Default rates by segment</div>
+    <div class="section-desc" style="margin-bottom:1.5rem;">
+        The full cross-tab below unpacks the same four segments, showing exact default rates
+        and confirming that the two scores measure genuinely different risk signals.
     </div>
 
     <div class="crosstab-wrap">
@@ -977,11 +1655,11 @@
     </div>
 
     <div class="note" style="margin-top: 1rem;">
-        <strong>Reading the matrix:</strong> Trad High + Flow Low (32.1% default) exposes borrowers
-        who look creditworthy to bureaus but show financial distress in their cash flow.
-        Trad Low + Flow High (14.8% default) are the missed opportunity segment —
-        excluded by traditional scoring but materially safer than the 43.6% base rate
-        for all traditionally-rejected borrowers.
+        <strong>Reading the matrix:</strong> Trad High + Flow Low (32.1% default) highlights
+        borrowers who appear creditworthy on paper but show signs of financial stress in their
+        transaction history. Trad Low + Flow High (14.8% default) is the missed opportunity segment,
+        excluded by traditional scoring despite having a much lower default rate than the 43.6%
+        base rate for all rejected borrowers.
     </div>
 
     <div class="chart-grid" style="margin-top: 2rem;">
@@ -1000,8 +1678,8 @@
     <div class="section-label" style="margin-top: 2.5rem;">Loss Reduction at Fixed Approval Rates</div>
     <p style="color: var(--slate-light); font-size: 0.87rem; margin-bottom: 1rem;">
         At equal approval volume, cash flow scoring consistently reduces default losses.
-        Peak reduction occurs at the 70% approval rate — the operationally relevant zone
-        for most personal loan and credit card portfolios.
+        The peak reduction occurs at the 70% approval rate, which tends to be a common
+        target range for personal loan and credit card portfolios.
     </p>
     <div class="table-wrap">
         <table>
@@ -1053,9 +1731,9 @@
             <div class="card-label">Rescued Borrowers</div>
             <div class="card-value" style="color: var(--blue-light);">66</div>
             <div class="card-desc">
-                Traditionally rejected borrowers the cash flow model approves
-                (default probability below 30%). Rescued group default rate: <strong>18.2%</strong> —
-                well below the 25% overall rate, confirming these are genuinely creditworthy approvals.
+                Of the 135 missed-opportunity applicants FlowScore identifies, 66 fall below
+                the 30% risk threshold — the subset a lender could confidently approve outright.
+                Their default rate is <strong>18.2%</strong>, well below the 25% overall rate.
             </div>
         </div>
         <div class="card">
@@ -1063,8 +1741,9 @@
             <div class="card-value" style="color: var(--amber);">43.6%</div>
             <div class="card-desc">
                 Precision of the cash flow risk flag on traditionally approved borrowers
-                (default probability above 50%). 72 true defaults caught out of 165 flagged —
-                useful for routing to a human underwriting review queue.
+                (default probability above 50%). 72 true defaults caught out of 165 flagged,
+                which could be useful for routing applications to a manual underwriting review
+                queue rather than auto-approving.
             </div>
         </div>
     </div>
@@ -1077,13 +1756,13 @@
     <div class="section-label">Pipeline Walkthrough</div>
     <div class="section-title">Two consumers, two different stories</div>
     <div class="section-desc">
-        The same pipeline, applied to real examples from the dataset. Same data source, opposite outcomes. This is what cash flow scoring sees that traditional scores cannot.
+        The same pipeline, applied to two examples from the dataset. Same data source, different outcomes. A concrete look at what cash flow features pick up on.
     </div>
 
     <!-- Consumer outcome cards -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2rem;">
         <div class="card" style="border-left:3px solid var(--blue);">
-            <div class="card-label">Consumer A — Missed Opportunity</div>
+            <div class="card-label">Consumer A: Missed Opportunity</div>
             <div style="font-size:0.78rem; color:var(--slate-light); margin-bottom:1rem;">Thin-file newcomer &nbsp;·&nbsp; $2,648/mo &nbsp;·&nbsp; 4 months of history</div>
             <div style="display:flex; gap:1.5rem; align-items:center;">
                 <div>
@@ -1098,10 +1777,10 @@
                     <div style="font-size:0.68rem; color:var(--green);">APPROVED ✓</div>
                 </div>
             </div>
-            <div style="margin-top:1rem; font-size:0.78rem; color:var(--slate-light);">Did not default. A good customer lost by traditional scoring.</div>
+            <div style="margin-top:1rem; font-size:0.78rem; color:var(--slate-light);">Did not default. Someone a traditional score would have passed on.</div>
         </div>
         <div class="card" style="border-left:3px solid var(--red);">
-            <div class="card-label">Consumer B — Avoidable Risk</div>
+            <div class="card-label">Consumer B: Avoidable Risk</div>
             <div style="font-size:0.78rem; color:var(--slate-light); margin-bottom:1rem;">Overextended &nbsp;·&nbsp; $4,761/mo &nbsp;·&nbsp; 11 months of history</div>
             <div style="display:flex; gap:1.5rem; align-items:center;">
                 <div>
@@ -1116,17 +1795,17 @@
                     <div style="font-size:0.68rem; color:var(--red);">FLAGGED ⚠</div>
                 </div>
             </div>
-            <div style="margin-top:1rem; font-size:0.78rem; color:var(--slate-light);">Defaulted. A loss that cash flow scoring would have caught.</div>
+            <div style="margin-top:1rem; font-size:0.78rem; color:var(--slate-light);">Did default. The kind of case where cash flow features add the most signal.</div>
         </div>
     </div>
 
     <!-- Categorization example -->
     <div class="section-label">What categorization sees</div>
     <div class="code-block" style="font-size:0.76rem; margin-bottom:2rem;">
-        <span class="comment"># Clean merchant string — rule matches instantly</span><br>
+        <span class="comment"># Clean merchant string: rule matches instantly</span><br>
         TACO BELL &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; → <span style="color:var(--blue-light);">dining</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; rule match<br>
         STARK INDUSTRIES PAY &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; → <span style="color:var(--blue-light);">payroll</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; rule match<br><br>
-        <span class="comment"># Noisy merchant string — rules fail, sent to fine-tuned DistilBERT</span><br>
+        <span class="comment"># Noisy merchant string: rules fail, sent to fine-tuned DistilBERT</span><br>
         DOORDASH ORDER &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; → <span style="color:var(--slate);">"ONLINE PMT DOORDASH O"</span> &nbsp;(truncated + prefix added)<br>
         &nbsp;&nbsp;&nbsp;rule: <span style="color:var(--red);">no match</span> &nbsp;→ DistilBERT → <span style="color:var(--green);">food_delivery</span> &nbsp;correct
     </div>
@@ -1194,14 +1873,14 @@
 <div class="divider"></div>
 
 <!-- ─── METHODOLOGY ─── -->
-<section class="fade-in">
+<section id="methodology" class="fade-in">
     <div class="section-label">Methodology</div>
     <div class="section-title">Honest about the data</div>
     <div class="section-desc">
         This project uses synthetic transaction data: 5,000 consumers across 6 behavioral archetypes,
         3.3M transactions, 25.1% overall default rate. Default labels are generated from
-        transaction-derived signals, not actual credit outcomes. The goal is demonstrating pipeline
-        integrity and methodology, not publishing production metrics.
+        transaction-derived signals rather than actual credit outcomes. The goal is to demonstrate
+        a working pipeline and methodology, so these numbers shouldn't be taken as production benchmarks.
     </div>
 
     <div class="code-block">
@@ -1217,42 +1896,42 @@
         <span class="cmd">python src/model.py --features data/features.csv --output data/model_results/</span>
     </div>
 
-    <div class="section-label" style="margin-top: 3rem;">FlowScore → Prism Data Product Mapping</div>
+    <div class="section-label" style="margin-top: 2.5rem;">How this maps to production cash flow underwriting</div>
     <div class="table-wrap">
         <table>
             <thead>
-                <tr><th>FlowScore Module</th><th>Prism Data Product</th><th>Function</th></tr>
+                <tr><th>FlowScore Module</th><th>Production Equivalent</th><th>Function</th></tr>
             </thead>
             <tbody>
                 <tr>
                     <td>Transaction Categorizer</td>
-                    <td class="mono" style="color:var(--blue-light);">Categories v4</td>
+                    <td class="mono" style="color:var(--blue-light);">Transaction Categorization API</td>
                     <td>Classify raw merchant strings into 25 spending categories</td>
                 </tr>
                 <tr>
                     <td>Feature Engine</td>
-                    <td class="mono" style="color:var(--blue-light);">Insights v4 + Income v4</td>
+                    <td class="mono" style="color:var(--blue-light);">Behavioral Insights + Income API</td>
                     <td>Extract 45 behavioral attributes from categorized transaction history</td>
                 </tr>
                 <tr>
                     <td>Credit Risk Model</td>
-                    <td class="mono" style="color:var(--blue-light);">CashScore® v4</td>
+                    <td class="mono" style="color:var(--blue-light);">Credit Risk Scoring API</td>
                     <td>Predict default probability; calibrate to a 300–850 score</td>
                 </tr>
                 <tr>
                     <td>Business Value Analysis</td>
-                    <td class="mono" style="color:var(--blue-light);">Client Reporting</td>
+                    <td class="mono" style="color:var(--blue-light);">Portfolio Analytics</td>
                     <td>Approval lift curves, loss simulation, orthogonality matrix</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <div class="section-label" style="margin-top: 3rem;">Dataset: Synthetic Consumer Archetypes</div>
+    <div class="section-label" style="margin-top: 2.5rem;">Dataset: Synthetic Consumer Archetypes</div>
     <p style="color:var(--slate-light); font-size:0.87rem; margin-bottom:1rem;">
         Each archetype has distinct income patterns, spending behaviors, and default probabilities.
-        The financially_stressed and overextended archetypes are where cash flow signals
-        most visibly diverge from traditional scores.
+        The financially_stressed and overextended archetypes are where the gap between
+        cash flow signals and traditional scores tends to be most visible.
     </p>
     <div class="table-wrap">
         <table>
@@ -1300,36 +1979,35 @@
     <div class="section-label">Fairness &amp; Disparate Impact</div>
     <h2 class="section-title">Does FlowScore treat everyone fairly?</h2>
     <p class="section-sub">
-        Traditional credit scores exclude consumers not because they're risky, but because
-        they lack the <em>type</em> of history FICO requires. FlowScore is evaluated against
-        the EEOC 80% rule and score calibration equity to ensure it doesn't replicate — or
-        introduce new — forms of disparate impact.
+        Traditional credit scores often exclude consumers who have limited experience with
+        formal credit products, even when those consumers have been financially responsible.
+        I evaluated FlowScore against the EEOC 80% rule and score calibration equity to
+        check for disparate impact.
     </p>
 
     <div class="card-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 2rem;">
         <div class="card">
             <div class="card-label">Thin File / Newcomer</div>
             <div class="stat-big" style="color: var(--blue);">29.4×</div>
-            <div class="card-desc">more approvals from FlowScore vs traditional score, at the same 15.5% actual default rate — capturing creditworthy immigrants and young adults invisible to FICO</div>
+            <div class="card-desc">more approvals from FlowScore vs traditional score, at the same 15.5% actual default rate, capturing creditworthy immigrants and young adults invisible to FICO</div>
         </div>
         <div class="card">
             <div class="card-label">Gig Worker</div>
             <div class="stat-big" style="color: var(--amber);">Accurate</div>
-            <div class="card-desc">FlowScore approves fewer gig workers than traditional scoring because their actual default rate is 31.3% — a genuine risk difference, not unfair bias. Traditional scoring over-approves this group.</div>
+            <div class="card-desc">FlowScore approves fewer gig workers than traditional scoring, which reflects their actual default rate of 31.3%. The model is responding to a real risk pattern, though this is also the group where I'd want the most scrutiny to make sure the features aren't proxying for something else.</div>
         </div>
         <div class="card">
             <div class="card-label">EEOC Adverse Impact</div>
             <div class="stat-big" style="color: var(--green);">Honest</div>
-            <div class="card-desc">AIR analysis shows lower approval rates for financially stressed and overextended groups reflect documented behavioral risk differences, not group membership. Thin-file and stable groups pass the 0.80 AIR threshold.</div>
+            <div class="card-desc">AIR analysis shows lower approval rates for financially stressed and overextended groups track closely with observed behavioral risk differences. Thin-file and stable groups pass the 0.80 AIR threshold.</div>
         </div>
     </div>
 
     <h3 style="margin-bottom: 1rem; color: var(--off-white);">What is score calibration equity?</h3>
     <p style="color: var(--slate-light); margin-bottom: 1.5rem; max-width: 720px;">
-        A fair scoring model should predict the <em>same</em> default rate for two consumers
-        with the same FlowScore, regardless of their demographic archetype. The calibration
-        analysis below shows that within each score band, default rates are consistent across
-        archetypes — the model measures financial behavior, not group membership.
+        A fair scoring model should predict similar default rates for consumers with the same
+        FlowScore, regardless of which archetype they belong to. The calibration table below
+        checks whether that holds within each score band.
     </p>
 
     <div class="card" style="overflow-x: auto;">
@@ -1387,14 +2065,13 @@
     </div>
 </section>
 
-<!-- ─── PRISM DATA PITCH SECTION ─── -->
-<section id="prism-pitch" class="fade-in">
+<section id="lenders" class="fade-in">
     <div class="section-label">For Lenders &amp; Partners</div>
     <h2 class="section-title">What this means for your portfolio</h2>
     <p class="section-sub">
-        FlowScore is not a replacement for traditional credit scores — it's a second opinion
-        on the consumers they can't see. Deployed as a complement to your existing underwriting,
-        it delivers measurable portfolio improvements from day one.
+        FlowScore is designed to complement traditional credit scores by adding a second layer
+        of analysis for consumers where bureau data is limited or misleading. The results suggest
+        it could improve portfolio outcomes when used alongside existing underwriting.
     </p>
 
     <div class="card-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2.5rem;">
@@ -1404,11 +2081,11 @@
             <div class="card-desc" style="margin-bottom:1rem;">
                 Of the 465 borrowers rejected by traditional scoring, <strong>285 (61.3%)</strong>
                 would actually repay. The cash flow model identifies 66 of them with under 30%
-                default risk — safe approvals that traditional scoring leaves on the table.
+                default risk, representing safe approvals that traditional scoring leaves on the table.
             </div>
             <ul style="color: var(--slate-light); font-size: 0.88rem; padding-left: 1.2rem; line-height:1.9;">
-                <li>Rescued group default rate: 18.2% — well below the 25% overall rate</li>
-                <li>The traditional score has no signal for thin-file consumers — cash flow does</li>
+                <li>Rescued group default rate: 18.2%, well below the 25% overall rate</li>
+                <li>Cash flow features provide signal for thin-file consumers where bureau data is sparse</li>
                 <li>Unlocks access for 76M+ credit-invisible Americans</li>
             </ul>
         </div>
@@ -1423,64 +2100,56 @@
             <ul style="color: var(--slate-light); font-size: 0.88rem; padding-left: 1.2rem; line-height:1.9;">
                 <li>16.9% of traditionally-approved borrowers ultimately defaulted</li>
                 <li>Cash flow catches 54.1% of them before approval (72 of 133 actual defaults)</li>
-                <li>Each flagged borrower = avoided loss, not just deferred risk</li>
+                <li>Each flagged borrower represents a potential avoided loss before funds are extended</li>
             </ul>
         </div>
     </div>
 
     <h3 style="margin-bottom: 1.2rem; color: var(--off-white);">The orthogonality thesis</h3>
     <p style="color: var(--slate-light); margin-bottom: 1.5rem; max-width: 740px;">
-        The core finding is not that cash flow beats traditional scores — it's that they're
-        <strong style="color:var(--off-white);">measuring different things</strong>. Traditional
-        scores measure <em>credit history behavior</em>. Cash flow scores measure
-        <em>financial behavior</em>. Each catches risk the other misses.
+        The more interesting result to me is that cash flow and traditional scores seem to be
+        <strong style="color:var(--off-white);">measuring genuinely different things</strong>. Traditional
+        scores capture <em>credit history behavior</em>. Cash flow features capture
+        <em>current financial behavior</em>. In the orthogonality matrix, they flag different cases,
+        which suggests they're complementary rather than redundant.
     </p>
 
     <div class="card" style="margin-bottom: 2rem;">
-        <div class="card-label">Decision Framework: When to use each score</div>
-        <table style="width:100%; border-collapse:collapse; margin-top:1rem; font-size:0.85rem;">
+        <div class="card-label">Where the two scores disagree — and what to do</div>
+        <p style="font-size:0.82rem; color:var(--slate-light); margin:0.6rem 0 1rem;">
+            When both scores agree, the decision is straightforward. The two cases below are where
+            cash flow data changes the picture.
+        </p>
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
             <thead>
                 <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
                     <th style="text-align:left;padding:10px 12px;color:var(--slate-light);">Scenario</th>
-                    <th style="text-align:center;padding:10px;color:var(--slate-light);">Traditional Score</th>
+                    <th style="text-align:center;padding:10px;color:var(--slate-light);">Traditional</th>
                     <th style="text-align:center;padding:10px;color:var(--slate-light);">FlowScore</th>
                     <th style="text-align:left;padding:10px;color:var(--slate-light);">Recommended Action</th>
                 </tr>
             </thead>
             <tbody>
                 <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <td style="padding:10px 12px;color:var(--off-white);">Trad High ≥660, Flow High ≥650</td>
-                    <td style="text-align:center;padding:10px;color:#22c55e;">✓ Good</td>
-                    <td style="text-align:center;padding:10px;color:#22c55e;">✓ Good</td>
-                    <td style="padding:10px;color:var(--slate-light);">Standard approval — 9.0% default rate</td>
-                </tr>
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <td style="padding:10px 12px;color:var(--off-white);">Trad High ≥660, Flow Low &lt;650</td>
+                    <td style="padding:10px 12px;color:var(--off-white);">Bureau approved, poor cash flow</td>
                     <td style="text-align:center;padding:10px;color:#22c55e;">Good</td>
                     <td style="text-align:center;padding:10px;color:#ef4444;">Risky</td>
-                    <td style="padding:10px;color:#f59e0b;">Flag for manual review — 32.1% default rate</td>
-                </tr>
-                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <td style="padding:10px 12px;color:var(--off-white);">Trad Low &lt;660, Flow High ≥650</td>
-                    <td style="text-align:center;padding:10px;color:#ef4444;">Rejected</td>
-                    <td style="text-align:center;padding:10px;color:#22c55e;">Good</td>
-                    <td style="padding:10px;color:#3b82f6;">Reconsider — 14.8% default, manageable risk</td>
+                    <td style="padding:10px;color:#f59e0b;">Route to manual review — 32.1% default rate in this segment</td>
                 </tr>
                 <tr>
-                    <td style="padding:10px 12px;color:var(--off-white);">Trad Low &lt;660, Flow Low &lt;650</td>
+                    <td style="padding:10px 12px;color:var(--off-white);">Bureau rejected, strong cash flow</td>
                     <td style="text-align:center;padding:10px;color:#ef4444;">Rejected</td>
-                    <td style="text-align:center;padding:10px;color:#ef4444;">Risky</td>
-                    <td style="padding:10px;color:var(--slate-light);">Decline — both models agree, 43.6% default rate</td>
+                    <td style="text-align:center;padding:10px;color:#22c55e;">Good</td>
+                    <td style="padding:10px;color:#60a5fa;">Reconsider — 14.8% default rate, below portfolio average</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <h3 style="margin-bottom: 1.2rem; color: var(--off-white);">Pipeline compatibility with Prism Data's infrastructure</h3>
+    <h3 style="margin-bottom: 1.2rem; color: var(--off-white);">Pipeline compatibility with open banking infrastructure</h3>
     <p style="color: var(--slate-light); margin-bottom: 1.5rem; max-width: 740px;">
-        This pipeline was designed to map directly to Prism Data's data model. The transaction
-        categorizer, feature engineering layer, and risk model each correspond to a stage in
-        Prism's cash flow underwriting product.
+        I designed this pipeline to mirror how production cash flow underwriting systems are typically structured.
+        Each component corresponds to a stage in a real open banking credit workflow.
     </p>
     <div class="card-grid" style="grid-template-columns: repeat(3, 1fr);">
         <div class="card">
@@ -1489,19 +2158,19 @@
         </div>
         <div class="card">
             <div class="card-label">Behavioral Feature Engineering</div>
-            <div class="card-desc">45 signals across income stability, spending discipline, obligation burden, balance trajectory, and red flags — designed around the variables Prism Data tracks.</div>
+            <div class="card-desc">45 signals across income stability, spending discipline, obligation burden, balance trajectory, and red flags, designed around the variables open banking underwriting systems commonly track.</div>
         </div>
         <div class="card">
             <div class="card-label">Risk Score + Reason Codes</div>
-            <div class="card-desc">CatBoost + Optuna (0.764 AUC) with feature-importance-weighted reason codes — the same output format lenders require for regulatory compliance and adverse action notices.</div>
+            <div class="card-desc">CatBoost + Optuna (0.764 AUC) with feature-importance-weighted reason codes in the format lenders need for regulatory compliance and adverse action notices.</div>
         </div>
     </div>
 
-    <div class="card" style="margin-top:2rem; background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.3);">
+    <div class="card no-glow" style="margin-top:2rem; background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.3);">
         <div class="card-label" style="color:var(--blue);">Try the Live Demo</div>
         <p style="color:var(--slate-light); margin: 0.5rem 0 1rem;">
-            Enter a consumer's financial profile and get a FlowScore with top 3 reason codes —
-            the same output format a lender would receive from a cash flow underwriting API.
+            Enter a consumer's financial profile and get a FlowScore with top 3 reason codes,
+            formatted the way a lender would typically receive output from a cash flow underwriting API.
         </p>
         <a href="https://flowscore.streamlit.app"
            target="_blank"
@@ -1558,6 +2227,124 @@
             closeMobile();
         }
     });
+
+    // ─── TUBELIGHT NAV ───
+    (function () {
+        const nav = document.getElementById('tubelight-nav');
+        const lamp = document.getElementById('tl-lamp');
+        const items = Array.from(nav.querySelectorAll('.tl-item'));
+
+        function moveLamp(item, animate) {
+            if (animate) lamp.classList.add('animated');
+            else lamp.classList.remove('animated');
+            lamp.style.left = item.offsetLeft + 'px';
+            lamp.style.width = item.offsetWidth + 'px';
+        }
+
+        function setActive(item, animate) {
+            items.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            moveLamp(item, animate);
+        }
+
+        // Initial placement — no animation
+        requestAnimationFrame(() => {
+            setActive(items[0], false);
+            // Re-enable animation on next frame so initial paint is instant
+            requestAnimationFrame(() => lamp.classList.add('animated'));
+        });
+
+        // Click: move lamp and let scroll-spy sync the rest
+        items.forEach(item => {
+            item.addEventListener('click', () => setActive(item, true));
+        });
+
+        // Scroll-spy: highlight whichever section is closest to viewport center
+        const sections = items.map(item => ({
+            item,
+            section: document.getElementById(item.getAttribute('href').slice(1))
+        })).filter(s => s.section);
+
+        function onScroll() {
+            const mid = window.scrollY + window.innerHeight / 2;
+            let closest = sections[0];
+            let minDist = Infinity;
+            sections.forEach(s => {
+                const dist = Math.abs(s.section.offsetTop - mid);
+                if (dist < minDist) { minDist = dist; closest = s; }
+            });
+            if (!closest.item.classList.contains('active')) {
+                setActive(closest.item, true);
+            }
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll(); // run once on load
+    })();
+
+    // ─── ANIMATED BAR CHART CARD ───
+    (function () {
+        const card = document.getElementById('abc-risk-card');
+        if (!card) return;
+        card.addEventListener('mouseenter', () => card.classList.add('hovered'));
+        card.addEventListener('mouseleave', () => card.classList.remove('hovered'));
+    })();
+
+    // ─── CIRCULAR PIPELINE ───
+    (function () {
+        const svg      = document.getElementById('cp-svg');
+        const center   = document.getElementById('cp-center');
+        const hover    = document.getElementById('cp-hover');
+        const hoverNum   = document.getElementById('cp-hover-num');
+        const hoverLabel = document.getElementById('cp-hover-label');
+        const hoverDesc  = document.getElementById('cp-hover-desc');
+
+        const steps = [
+            { num: '01', label: 'Raw Transactions',          desc: 'Bank statement data input'       },
+            { num: '02', label: 'DistilBERT Categorization', desc: 'NLP-based transaction labeling'  },
+            { num: '03', label: '45 Behavioral Features',    desc: 'Engineered cash flow signals'    },
+            { num: '04', label: 'FlowScore 300–850',         desc: 'CatBoost + Optuna scoring'       },
+        ];
+
+        document.querySelectorAll('.cp-text-seg').forEach((seg, i) => {
+            seg.addEventListener('mouseenter', () => {
+                svg.classList.add('paused');
+                center.style.opacity = '0';
+                hoverNum.textContent   = steps[i].num;
+                hoverLabel.textContent = steps[i].label;
+                hoverDesc.textContent  = steps[i].desc;
+                hover.style.opacity = '1';
+            });
+            seg.addEventListener('mouseleave', () => {
+                svg.classList.remove('paused');
+                center.style.opacity = '1';
+                hover.style.opacity  = '0';
+            });
+        });
+    })();
+
+    // ─── GLOWING BORDER EFFECT ───
+    (function () {
+        document.querySelectorAll('.card:not(.no-glow), .acc-card').forEach(card => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'glow-wrapper';
+            card.parentNode.insertBefore(wrapper, card);
+            wrapper.appendChild(card);
+
+            // Move inline margins from the card to the wrapper so the
+            // glow-border (inset:0 of wrapper) stays flush with the card.
+            ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'].forEach(prop => {
+                if (card.style[prop]) {
+                    wrapper.style[prop] = card.style[prop];
+                    card.style[prop] = '';
+                }
+            });
+
+            const border = document.createElement('div');
+            border.className = 'glow-border';
+            wrapper.insertBefore(border, card);
+        });
+    })();
 </script>
 
 </body>
